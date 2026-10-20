@@ -20,6 +20,13 @@ def test_maintenance_tab_shows_items_with_status(client, db_session):
     assert "Connecting rod" in response.text
 
 
+def test_maintenance_tab_links_to_edit_bike(client, db_session):
+    bike = _make_bike(db_session)
+    response = client.get(f"/bikes/{bike.id}")
+    assert response.status_code == 200
+    assert f"/bikes/{bike.id}/edit" in response.text
+
+
 def test_set_hours_updates_current_hours_and_statuses(client, db_session):
     bike = _make_bike(db_session)
     response = client.post(f"/bikes/{bike.id}/hours", data={"hours": 28})

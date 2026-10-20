@@ -4,7 +4,7 @@
 
 {% block content %}
 <h1>{{ bike.nickname }}</h1>
-<p class="bike-meta">{{ bike_model.display_name }} &middot; {{ current_hours }} hrs</p>
+<p class="bike-meta">{{ bike_model.display_name }} &middot; {{ current_hours }} hrs &middot; <a href="/bikes/{{ bike.id }}/edit" class="bike-edit-link">Edit</a></p>
 
 <nav class="bike-tabs">
   <a href="/bikes/{{ bike.id }}" class="bike-tab{% if request.url.path == '/bikes/' ~ bike.id %} active{% endif %}">Maintenance</a>
