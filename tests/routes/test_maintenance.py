@@ -48,6 +48,41 @@ def test_complete_item_creates_service_record_and_advances_next_point(client, db
     assert records[0].service_point == 30
 
 
+def test_complete_item_history_appears_in_maintenance_tab(client, db_session):
+    bike = _make_bike(db_session)
+    db_session.add(HoursEvent(bike_id=bike.id, date="2026-01-01", kind="set", hours=30))
+    db_session.commit()
+    complete_response = client.post(
+        f"/bikes/{bike.id}/items/oil/complete",
+        data={"date": "2026-01-10", "hours": 31, "notes": "used synthetic"},
+    )
+    assert complete_response.status_code == 200
+    # The htmx partial response from the completion itself already reflects
+    # the new history entry.
+    assert "2026-01-10" in complete_response.text
+    assert "31" in complete_response.text
+    assert "used synthetic" in complete_response.text
+
+    # And it's still there on a later GET of the tab.
+    get_response = client.get(f"/bikes/{bike.id}")
+    assert get_response.status_code == 200
+    assert "2026-01-10" in get_response.text
+    assert "31" in get_response.text
+    assert "used synthetic" in get_response.text
+
+
+def test_complete_item_history_shows_most_recent_first(client, db_session):
+    bike = _make_bike(db_session)
+    db_session.add_all([
+        ServiceRecord(bike_id=bike.id, item_key="oil", service_point=30, completed_date="2026-01-01", engine_hours=30, notes="first"),
+        ServiceRecord(bike_id=bike.id, item_key="oil", service_point=60, completed_date="2026-02-01", engine_hours=60, notes="second"),
+    ])
+    db_session.commit()
+    response = client.get(f"/bikes/{bike.id}")
+    assert response.status_code == 200
+    assert response.text.index("second") < response.text.index("first")
+
+
 def test_complete_item_rejects_when_beyond_schedule(client, db_session):
     bike = _make_bike(db_session)
     db_session.add_all([

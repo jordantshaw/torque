@@ -44,8 +44,10 @@ def build_maintenance_context(request: Request, bike: Bike) -> dict:
     hours = current_hours(events)
 
     recorded_by_item: dict[str, set[int]] = {}
+    records_by_item: dict[str, list] = {}
     for record in bike.service_records:
         recorded_by_item.setdefault(record.item_key, set()).add(record.service_point)
+        records_by_item.setdefault(record.item_key, []).append(record)
 
     categories: dict[str, list[dict]] = {}
     service_points: set[int] = set()
@@ -56,6 +58,11 @@ def build_maintenance_context(request: Request, bike: Bike) -> dict:
         if info.next_point is not None:
             action = action_at(item.schedule, info.next_point)
             service_points.add(info.next_point)
+        history = sorted(
+            records_by_item.get(item.key, []),
+            key=lambda r: (r.completed_date, r.id),
+            reverse=True,
+        )
         categories.setdefault(item.category, []).append({
             "key": item.key,
             "name": item.name,
@@ -63,6 +70,7 @@ def build_maintenance_context(request: Request, bike: Bike) -> dict:
             "next_point": info.next_point,
             "hours_overdue": info.hours_overdue,
             "action": action,
+            "history": history,
         })
 
     return {
