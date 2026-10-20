@@ -52,6 +52,38 @@ def test_edit_unknown_ride_returns_404(client, db_session):
     assert client.get(f"/bikes/{bike.id}/rides/999/edit").status_code == 404
 
 
+def test_edit_ride_rejects_invalid_hours_and_preserves_submitted_values(client, db_session):
+    bike = _make_bike(db_session)
+    client.post(f"/bikes/{bike.id}/rides", data={"date": "2026-01-01", "hours": 5, "notes": "original"})
+    ride = db_session.query(Ride).filter_by(bike_id=bike.id).one()
+
+    response = client.post(
+        f"/bikes/{bike.id}/rides/{ride.id}",
+        data={"date": "2026-02-02", "hours": 0, "notes": "edited notes"},
+    )
+
+    assert response.status_code == 400
+    # The error shows on the edited row's own form, not the "log a ride"
+    # create form (which would appear if the whole list were re-rendered
+    # with default/create-form values).
+    assert "Log a ride" not in response.text
+    assert "Hours must be greater than zero." in response.text
+    assert response.headers["HX-Retarget"] == f"#ride-{ride.id}"
+    # The user's submitted values are preserved, not the ride's old DB values.
+    assert 'value="2026-02-02"' in response.text
+    assert "edited notes" in response.text
+    # Nothing was written to the DB: the ride and its linked HoursEvent keep
+    # their original, unedited values.
+    db_session.expire_all()
+    ride_db = db_session.query(Ride).filter_by(id=ride.id).one()
+    assert ride_db.date == "2026-01-01"
+    assert ride_db.hours == 5
+    assert ride_db.notes == "original"
+    event = db_session.query(HoursEvent).filter_by(bike_id=bike.id, kind="ride", ride_id=ride.id).one()
+    assert event.date == "2026-01-01"
+    assert event.hours == 5
+
+
 def test_rides_tab_prefills_suspension_from_most_recent_ride(client, db_session):
     bike = _make_bike(db_session)
     client.post(f"/bikes/{bike.id}/rides", data={"date": "2026-01-01", "hours": 2, "notes": "", "fork_compression": 10})

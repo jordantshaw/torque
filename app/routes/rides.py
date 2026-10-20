@@ -234,6 +234,10 @@ def edit_ride_form(bike_id: int, ride_id: int, request: Request, session: Sessio
         "action": f"/bikes/{bike_id}/rides/{ride.id}",
         "submit_label": "Save",
         "cancel_url": f"/bikes/{bike_id}/rides",
+        # Keeps the `ride-{id}` id on the swapped-in element (replacing the
+        # display `<li id="ride-{id}">`), so a later failed update POST can
+        # retarget its error back onto this same element by id.
+        "wrapper_id": f"ride-{ride.id}",
     }
     return request.app.state.templates.TemplateResponse(request, "_ride_form.html", context)
 
@@ -251,7 +255,27 @@ async def update_ride(bike_id: int, ride_id: int, request: Request, session: Ses
         date_str, error = _parse_date(str(form.get("date", "")))
 
     if error is not None:
-        return _render_list(request, bike, bike_model, error=error)
+        # Re-render just this ride's edit form in place (not the whole
+        # list, and not the "log a ride" create form) with the user's
+        # submitted values preserved, so a bad edit doesn't revert to the
+        # ride's old DB values or silently discard what they typed. The
+        # submitting form's own `hx-target` is "#rides-panel" (needed for
+        # the success path, which swaps the whole list); `HX-Retarget`
+        # overrides that for this response only, so htmx swaps this ride's
+        # row instead.
+        context = {
+            "error": error,
+            "values": _submitted_form_values(form),
+            "action": f"/bikes/{bike_id}/rides/{ride.id}",
+            "submit_label": "Save",
+            "cancel_url": f"/bikes/{bike_id}/rides",
+            "wrapper_id": f"ride-{ride.id}",
+        }
+        response = request.app.state.templates.TemplateResponse(
+            request, "_ride_form.html", context, status_code=400
+        )
+        response.headers["HX-Retarget"] = f"#ride-{ride.id}"
+        return response
 
     ride.date = date_str
     ride.hours = hours

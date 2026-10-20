@@ -1,3 +1,4 @@
+{% if wrapper_id %}<div id="{{ wrapper_id }}" class="ride-item ride-editing">{% endif %}
 {% if error %}
 <p class="form-error">{{ error }}</p>
 {% endif %}
@@ -22,3 +23,4 @@
   <a href="{{ cancel_url }}" class="cancel-link">Cancel</a>
   {% endif %}
 </form>
+{% if wrapper_id %}</div>{% endif %}
