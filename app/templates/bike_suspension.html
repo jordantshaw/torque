@@ -1,0 +1,48 @@
+{% extends "bike_base.html" %}
+
+{% block tab_content %}
+<div id="suspension-panel">
+  {% if bike_model.suspension.settings %}
+  <table class="suspension-settings">
+    <thead>
+      <tr>
+        <th>Setting</th>
+        <th>Factory</th>
+        <th>Racing</th>
+        <th>Comfort</th>
+        <th>Soft</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for setting in bike_model.suspension.settings %}
+      <tr>
+        <td>{{ setting.name }}</td>
+        <td>{{ setting.factory }}</td>
+        <td>{{ setting.racing }}</td>
+        <td>{{ setting.comfort }}</td>
+        <td>{{ setting.soft }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% endif %}
+
+  {% if bike_model.suspension.fixed_values %}
+  <section class="fixed-values">
+    <h3>Fixed Values</h3>
+    <dl>
+      {% for key, value in bike_model.suspension.fixed_values.items() %}
+      <dt>{{ key }}</dt>
+      <dd>{{ value }}</dd>
+      {% endfor %}
+    </dl>
+  </section>
+  {% endif %}
+
+  {% if bike_model.suspension.source %}
+  <section class="source">
+    <p><strong>Source:</strong> {{ bike_model.suspension.source }}</p>
+  </section>
+  {% endif %}
+</div>
+{% endblock %}

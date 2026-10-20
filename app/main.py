@@ -19,6 +19,7 @@ from app.routes.bikes import bikes_router
 from app.routes.home import home_router
 from app.routes.maintenance import maintenance_router
 from app.routes.rides import rides_router
+from app.routes.suspension import suspension_router
 
 STATIC_DIR = Path(__file__).parent / "static"
 TEMPLATES_DIR = Path(__file__).parent / "templates"
@@ -43,6 +44,7 @@ def create_app(bike_models_dir: Path, database_url: str) -> FastAPI:
     app.include_router(bikes_router)
     app.include_router(maintenance_router)
     app.include_router(rides_router)
+    app.include_router(suspension_router)
 
     @app.exception_handler(HTTPException)
     async def not_found_handler(request: Request, exc: HTTPException):
