@@ -6,6 +6,7 @@ sets up the database engine/session machinery, and mounts the shared
 static assets and Jinja2 templates every page route builds on.
 """
 
+import os
 from pathlib import Path
 
 from fastapi import FastAPI, HTTPException, Request
@@ -55,3 +56,9 @@ def create_app(bike_models_dir: Path, database_url: str) -> FastAPI:
         return await http_exception_handler(request, exc)
 
     return app
+
+
+app = create_app(
+    bike_models_dir=Path(os.environ.get("BIKE_MODELS_DIR", "bike_models")),
+    database_url=os.environ.get("DATABASE_URL", "sqlite:////data/app.db"),
+)

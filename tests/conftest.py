@@ -1,8 +1,17 @@
+import os
 import shutil
 from pathlib import Path
 
 import pytest
 from fastapi.testclient import TestClient
+
+# app.main builds a module-level `app` at import time from DATABASE_URL /
+# BIKE_MODELS_DIR env vars (for `uvicorn app.main:app` in Docker). Its default
+# DATABASE_URL points at /data/app.db, the container's volume mount, which
+# doesn't exist on a bare test host. Point it at an in-memory db before
+# importing so collecting this module doesn't fail outside Docker; no test
+# fixture uses this module-level instance, they all call create_app() directly.
+os.environ.setdefault("DATABASE_URL", "sqlite:///:memory:")
 
 from app.main import create_app
 
