@@ -18,7 +18,7 @@
         </div>
         <div class="ride-actions">
           <button type="button" class="ride-edit-btn" hx-get="/bikes/{{ bike.id }}/rides/{{ ride.id }}/edit" hx-target="#ride-{{ ride.id }}" hx-swap="outerHTML">Edit</button>
-          <form class="ride-delete-form" hx-post="/bikes/{{ bike.id }}/rides/{{ ride.id }}/delete" hx-target="#rides-panel" hx-swap="outerHTML">
+          <form class="ride-delete-form" hx-post="/bikes/{{ bike.id }}/rides/{{ ride.id }}/delete" hx-target="#rides-panel" hx-swap="outerHTML" hx-confirm="Delete this ride?">
             <button type="submit">Delete</button>
           </form>
         </div>

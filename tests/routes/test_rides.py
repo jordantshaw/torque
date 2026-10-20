@@ -26,6 +26,14 @@ def test_log_ride_rejects_zero_hours(client, db_session):
     assert db_session.query(HoursEvent).count() == 0
 
 
+def test_rides_list_delete_button_has_confirmation(client, db_session):
+    bike = _make_bike(db_session)
+    client.post(f"/bikes/{bike.id}/rides", data={"date": "2026-01-01", "hours": 5, "notes": ""})
+    response = client.get(f"/bikes/{bike.id}/rides")
+    assert response.status_code == 200
+    assert 'hx-confirm="Delete this ride?"' in response.text
+
+
 def test_edit_ride_updates_linked_hours_event_in_place(client, db_session):
     bike = _make_bike(db_session)
     client.post(f"/bikes/{bike.id}/rides", data={"date": "2026-01-01", "hours": 5, "notes": ""})
