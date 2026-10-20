@@ -40,6 +40,17 @@ def test_create_bike_rejects_unknown_model_key(client, db_session):
     assert db_session.query(Bike).count() == 0
 
 
+def test_base_page_overrides_htmx_response_handling_for_4xx_5xx(client):
+    # htmx's default responseHandling treats all 4xx/5xx as non-swappable
+    # errors, which would silently drop this app's "re-render partial with
+    # inline validation errors" 400 responses. base.html must override it so
+    # 4xx/5xx still swap (while still firing htmx:responseError).
+    response = client.get("/")
+    assert response.status_code == 200
+    assert "htmx.config.responseHandling" in response.text
+    assert '{code: "[45]..", swap: true, error: true}' in response.text
+
+
 def test_create_bike_blank_nickname_preserves_chosen_model(client, db_session):
     response = client.post("/bikes", data={"nickname": "", "model_key": "test-bike"})
     assert response.status_code == 400

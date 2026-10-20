@@ -6,6 +6,18 @@
   <title>{% block title %}Moto Maintenance{% endblock %}</title>
   <link rel="stylesheet" href="/static/style.css">
   <script src="/static/htmx.min.js"></script>
+  <script>
+    // Override htmx's default responseHandling so 4xx/5xx responses still
+    // swap their body into the DOM (while still firing htmx:responseError).
+    // Without this, routes that re-render a partial with a 400 to show
+    // inline validation errors never update the page, since htmx's default
+    // treats all 4xx/5xx as non-swappable errors.
+    htmx.config.responseHandling = [
+      {code: "204", swap: false},
+      {code: "[23]..", swap: true},
+      {code: "[45]..", swap: true, error: true}
+    ];
+  </script>
 </head>
 <body>
   {% block content %}{% endblock %}
