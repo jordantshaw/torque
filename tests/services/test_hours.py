@@ -30,3 +30,12 @@ def test_current_hours_orders_by_date_then_id_for_same_date():
         HoursEventInput(1, date(2026, 1, 1), "set", 50),
     ]
     assert current_hours(events) == 52
+
+
+def test_current_hours_accumulates_fractional_hours():
+    events = [
+        HoursEventInput(1, date(2026, 1, 1), "set", 10),
+        HoursEventInput(2, date(2026, 1, 5), "ride", 1.5),
+        HoursEventInput(3, date(2026, 1, 8), "ride", 2.25),
+    ]
+    assert current_hours(events) == 13.75

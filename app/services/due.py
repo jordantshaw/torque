@@ -26,12 +26,12 @@ class ItemDueInfo:
     """Status and due information for a maintenance item."""
     next_point: int | None
     status: Status
-    hours_overdue: int | None
+    hours_overdue: float | None
 
 
 def compute_due_info(
     schedule: ItemSchedule,
-    current_hours: int,
+    current_hours: float,
     recorded_hours: set[int],
 ) -> ItemDueInfo:
     """Compute the due status of a maintenance item given its schedule and the

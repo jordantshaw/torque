@@ -31,12 +31,13 @@ def _render_panel(request: Request, bike, error: str | None = None):
     )
 
 
-def _parse_hours(raw) -> tuple[int | None, str | None]:
-    """Parse a form `hours` value, returning (hours, error)."""
+def _parse_hours(raw) -> tuple[float | None, str | None]:
+    """Parse a form `hours` value, returning (hours, error). Fractional
+    hours (e.g. 1.5) are allowed."""
     try:
-        hours = int(raw)
+        hours = float(raw)
     except (TypeError, ValueError):
-        return None, "Hours must be a whole number."
+        return None, "Hours must be a number."
     if hours < 0:
         return None, "Hours must be zero or greater."
     return hours, None

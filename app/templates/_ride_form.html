@@ -4,7 +4,7 @@
 {% endif %}
 <form class="ride-form" hx-post="{{ action }}" hx-target="#rides-panel" hx-swap="outerHTML">
   <label>Date<input type="date" name="date" value="{{ values.date if values.date is not none else '' }}"></label>
-  <label>Hours<input type="number" name="hours" min="1" step="1" value="{{ values.hours if values.hours is not none else '' }}"></label>
+  <label>Hours<input type="number" name="hours" min="0.1" step="0.1" value="{{ values.hours if values.hours is not none else '' }}"></label>
   <label>Notes<input type="text" name="notes" value="{{ values.notes if values.notes is not none else '' }}" placeholder="Optional"></label>
 
   <fieldset class="suspension-fields">

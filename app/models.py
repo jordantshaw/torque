@@ -50,7 +50,7 @@ class Ride(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     bike_id: Mapped[int] = mapped_column(ForeignKey("bikes.id"))
     date: Mapped[date] = mapped_column(String)
-    hours: Mapped[int]
+    hours: Mapped[float]
     notes: Mapped[str | None] = mapped_column(default=None)
     fork_compression: Mapped[int | None] = mapped_column(default=None)
     fork_rebound: Mapped[int | None] = mapped_column(default=None)
@@ -70,7 +70,7 @@ class HoursEvent(Base):
     bike_id: Mapped[int] = mapped_column(ForeignKey("bikes.id"))
     date: Mapped[date] = mapped_column(String)
     kind: Mapped[str]
-    hours: Mapped[int]
+    hours: Mapped[float]
     ride_id: Mapped[int | None] = mapped_column(default=None)
     note: Mapped[str | None] = mapped_column(default=None)
 
@@ -85,7 +85,7 @@ class ServiceRecord(Base):
     item_key: Mapped[str]
     service_point: Mapped[int]
     completed_date: Mapped[date] = mapped_column(String)
-    engine_hours: Mapped[int]
+    engine_hours: Mapped[float]
     notes: Mapped[str | None] = mapped_column(default=None)
 
     bike: Mapped["Bike"] = relationship(back_populates="service_records")

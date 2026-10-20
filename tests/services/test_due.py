@@ -18,6 +18,13 @@ def test_compute_due_info_due_at_exact_boundary():
     info = compute_due_info(EveryHoursSchedule(30, "S"), current_hours=30, recorded_hours=set())
     assert info == ItemDueInfo(next_point=30, status=Status.DUE, hours_overdue=0)
 
+def test_compute_due_info_handles_fractional_current_hours():
+    info = compute_due_info(EveryHoursSchedule(30, "S"), current_hours=30.5, recorded_hours=set())
+    assert info == ItemDueInfo(next_point=30, status=Status.DUE, hours_overdue=0.5)
+    info = compute_due_info(EveryHoursSchedule(30, "S"), current_hours=27.5, recorded_hours=set())
+    assert info.status == Status.UPCOMING
+    assert info.next_point == 30
+
 def test_compute_due_info_beyond_schedule_when_no_next_point():
     schedule = ActionsSchedule({90: "S", 180: "S"})
     info = compute_due_info(schedule, current_hours=250, recorded_hours={90, 180})

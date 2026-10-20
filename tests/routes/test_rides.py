@@ -34,6 +34,17 @@ def test_rides_list_delete_button_has_confirmation(client, db_session):
     assert 'hx-confirm="Delete this ride?"' in response.text
 
 
+def test_log_ride_accepts_fractional_hours_and_contributes_to_current_hours(client, db_session):
+    bike = _make_bike(db_session)
+    response = client.post(f"/bikes/{bike.id}/rides", data={"date": "2026-01-01", "hours": 1.5, "notes": ""})
+    assert response.status_code == 200
+    ride = db_session.query(Ride).filter_by(bike_id=bike.id).one()
+    event = db_session.query(HoursEvent).filter_by(bike_id=bike.id, kind="ride").one()
+    assert ride.hours == 1.5
+    assert event.hours == 1.5
+    assert "Current hours: 1.5" in response.text
+
+
 def test_edit_ride_updates_linked_hours_event_in_place(client, db_session):
     bike = _make_bike(db_session)
     client.post(f"/bikes/{bike.id}/rides", data={"date": "2026-01-01", "hours": 5, "notes": ""})

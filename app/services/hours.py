@@ -10,10 +10,10 @@ class HoursEventInput:
     id: int
     date: date
     kind: Literal["ride", "set"]
-    hours: int
+    hours: float
 
 
-def current_hours(events: list[HoursEventInput]) -> int:
+def current_hours(events: list[HoursEventInput]) -> float:
     """
     Compute current total engine hours by replaying events.
 
@@ -30,7 +30,7 @@ def current_hours(events: list[HoursEventInput]) -> int:
     # Sort events by date, then by id for deterministic ordering on the same date
     sorted_events = sorted(events, key=lambda e: (e.date, e.id))
 
-    total = 0
+    total: float = 0
     for event in sorted_events:
         if event.kind == "set":
             total = event.hours

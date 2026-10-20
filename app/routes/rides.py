@@ -48,7 +48,7 @@ def get_ride_or_404(session: Session, bike_id: int, ride_id: int) -> Ride:
     return ride
 
 
-def _current_hours(bike: Bike) -> int:
+def _current_hours(bike: Bike) -> float:
     events = [
         HoursEventInput(id=e.id, date=e.date, kind=e.kind, hours=e.hours)
         for e in bike.hours_events
@@ -86,14 +86,15 @@ def _default_form_values(bike: Bike, bike_model) -> dict:
     return values
 
 
-def _parse_hours(raw) -> tuple[int | None, str | None]:
+def _parse_hours(raw) -> tuple[float | None, str | None]:
     """Parse a ride's `hours` form value. Unlike a direct "set hours" entry
     elsewhere in the app, a ride's hours must be strictly greater than
-    zero -- a ride with zero hours didn't happen."""
+    zero -- a ride with zero hours didn't happen. Fractional hours (e.g.
+    1.5) are allowed."""
     try:
-        hours = int(raw)
+        hours = float(raw)
     except (TypeError, ValueError):
-        return None, "Hours must be a whole number."
+        return None, "Hours must be a number."
     if hours <= 0:
         return None, "Hours must be greater than zero."
     return hours, None
