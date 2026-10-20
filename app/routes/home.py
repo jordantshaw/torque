@@ -89,7 +89,13 @@ async def create_bike(
         return request.app.state.templates.TemplateResponse(
             request,
             "home.html",
-            {"bikes": bike_views, "models": models, "error": error},
+            {
+                "bikes": bike_views,
+                "models": models,
+                "error": error,
+                "nickname": nickname,
+                "model_key": model_key,
+            },
             status_code=400,
         )
 

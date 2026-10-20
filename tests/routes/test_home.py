@@ -38,3 +38,17 @@ def test_create_bike_rejects_unknown_model_key(client, db_session):
     response = client.post("/bikes", data={"nickname": "X", "model_key": "nonexistent"})
     assert response.status_code == 400
     assert db_session.query(Bike).count() == 0
+
+
+def test_create_bike_blank_nickname_preserves_chosen_model(client, db_session):
+    response = client.post("/bikes", data={"nickname": "", "model_key": "test-bike"})
+    assert response.status_code == 400
+    # The previously chosen model stays selected in the re-rendered form.
+    assert '<option value="test-bike" selected>' in response.text
+
+
+def test_create_bike_unknown_model_preserves_typed_nickname(client, db_session):
+    response = client.post("/bikes", data={"nickname": "My Race Bike", "model_key": "nonexistent"})
+    assert response.status_code == 400
+    # The typed nickname stays in the input's value attribute.
+    assert 'value="My Race Bike"' in response.text

@@ -32,12 +32,12 @@
 
 <form method="post" action="/bikes">
   <label for="nickname">Nickname</label>
-  <input type="text" id="nickname" name="nickname" required>
+  <input type="text" id="nickname" name="nickname" value="{{ nickname or '' }}" required>
 
   <label for="model_key">Model</label>
   <select id="model_key" name="model_key">
     {% for model in models %}
-    <option value="{{ model.key }}">{{ model.display_name }}</option>
+    <option value="{{ model.key }}" {% if model.key == model_key %}selected{% endif %}>{{ model.display_name }}</option>
     {% endfor %}
   </select>
 
