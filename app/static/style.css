@@ -203,3 +203,84 @@ form button {
   border-top: 1px solid #e0e0e0;
   padding-top: 1rem;
 }
+
+/* Rides tab */
+.log-ride {
+  margin-top: 1rem;
+}
+
+.ride-form .suspension-fields {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 1rem;
+  padding: 0.75rem;
+  border: 1px solid #e0e0e0;
+}
+
+.ride-form .suspension-fields legend {
+  font-weight: 600;
+  padding: 0 0.25rem;
+}
+
+.ride-form .suspension-fields label {
+  flex: 1 1 10rem;
+  margin-top: 0;
+  font-size: 0.8rem;
+  color: #444;
+}
+
+.cancel-link {
+  display: inline-block;
+  margin-top: 1rem;
+  margin-left: 0.75rem;
+  color: #666;
+}
+
+.rides-history {
+  margin-top: 1.5rem;
+  border-top: 1px solid #e0e0e0;
+  padding-top: 1rem;
+}
+
+.rides-list {
+  list-style: none;
+  margin-top: 0.5rem;
+}
+
+.ride-item {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.ride-info {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.ride-hours {
+  font-weight: 600;
+}
+
+.ride-notes {
+  color: #666;
+}
+
+.ride-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.ride-delete-form {
+  display: inline;
+}
+
+.rides-empty {
+  color: #666;
+  padding: 0.75rem 0;
+}
