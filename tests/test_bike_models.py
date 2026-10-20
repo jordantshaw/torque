@@ -20,10 +20,30 @@ def test_load_valid_minimal_model():
     "invalid_both_actions_and_every_hours.yaml",
     "invalid_neither.yaml",
     "invalid_duplicate_item_key.yaml",
+    "invalid_missing_top_level_field.yaml",
+    "invalid_missing_item_field.yaml",
 ])
 def test_rejects_invalid_fixtures(filename):
     with pytest.raises(BikeModelError):
         load_bike_model(FIXTURES / filename)
+
+
+def test_missing_top_level_field_raises_bike_model_error_naming_field_and_file():
+    path = FIXTURES / "invalid_missing_top_level_field.yaml"
+    with pytest.raises(BikeModelError) as exc_info:
+        load_bike_model(path)
+    message = str(exc_info.value)
+    assert "display_name" in message
+    assert str(path) in message
+
+
+def test_missing_item_field_raises_bike_model_error_naming_field_and_file():
+    path = FIXTURES / "invalid_missing_item_field.yaml"
+    with pytest.raises(BikeModelError) as exc_info:
+        load_bike_model(path)
+    message = str(exc_info.value)
+    assert "name" in message
+    assert str(path) in message
 
 
 def test_load_bike_models_returns_dict_keyed_by_model_key(tmp_path):

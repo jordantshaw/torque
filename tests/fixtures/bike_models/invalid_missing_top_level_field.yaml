@@ -1,0 +1,13 @@
+key: test-bike-invalid
+engine: "test"
+items:
+  - key: oil
+    category: Engine
+    name: Oil
+    every_hours: 30
+    action: S
+notes: []
+suspension:
+  settings: []
+  fixed_values: {}
+  source: "n/a"

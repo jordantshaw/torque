@@ -60,6 +60,21 @@ class BikeModel:
     suspension: Suspension
 
 
+def _require(data: dict, field: str, path: Path, context: str | None = None) -> object:
+    """Return `data[field]`, raising `BikeModelError` naming the missing
+    field (and `context`, if given) and the source file.
+
+    Used in place of plain dict indexing for every required field, so a
+    typo'd or omitted field in a hand-transcribed manual produces a
+    `BikeModelError` pointing at the exact problem rather than a raw
+    `KeyError`.
+    """
+    if field not in data:
+        where = f"{context} in {path}" if context else str(path)
+        raise BikeModelError(f"{where}: missing required field '{field}'")
+    return data[field]
+
+
 def _build_schedule(item_data: dict, item_key: str, path: Path) -> ItemSchedule:
     has_every_hours = "every_hours" in item_data
     has_actions = "actions" in item_data
@@ -110,37 +125,43 @@ def _build_schedule(item_data: dict, item_key: str, path: Path) -> ItemSchedule:
 def _build_items(items_data: list[dict], path: Path) -> list[Item]:
     items: list[Item] = []
     seen_keys: set[str] = set()
-    for item_data in items_data:
-        item_key = item_data["key"]
+    for index, item_data in enumerate(items_data):
+        item_key = _require(item_data, "key", path, context=f"item at index {index}")
         if item_key in seen_keys:
             raise BikeModelError(
                 f"duplicate item key '{item_key}' in {path}"
             )
         seen_keys.add(item_key)
 
+        item_context = f"item '{item_key}'"
+        category = _require(item_data, "category", path, context=item_context)
+        name = _require(item_data, "name", path, context=item_context)
+
         schedule = _build_schedule(item_data, item_key, path)
         items.append(
             Item(
                 key=item_key,
-                category=item_data["category"],
-                name=item_data["name"],
+                category=category,
+                name=name,
                 schedule=schedule,
             )
         )
     return items
 
 
-def _build_suspension(suspension_data: dict) -> Suspension:
-    settings = [
-        SuspensionSetting(
-            name=setting["name"],
-            factory=setting["factory"],
-            racing=setting["racing"],
-            comfort=setting["comfort"],
-            soft=setting["soft"],
+def _build_suspension(suspension_data: dict, path: Path) -> Suspension:
+    settings = []
+    for index, setting in enumerate(suspension_data.get("settings", [])):
+        setting_context = f"suspension setting at index {index}"
+        settings.append(
+            SuspensionSetting(
+                name=_require(setting, "name", path, context=setting_context),
+                factory=_require(setting, "factory", path, context=setting_context),
+                racing=_require(setting, "racing", path, context=setting_context),
+                comfort=_require(setting, "comfort", path, context=setting_context),
+                soft=_require(setting, "soft", path, context=setting_context),
+            )
         )
-        for setting in suspension_data.get("settings", [])
-    ]
     return Suspension(
         settings=settings,
         fixed_values=suspension_data.get("fixed_values", {}),
@@ -157,12 +178,12 @@ def load_bike_model(path: Path) -> BikeModel:
         raise BikeModelError(f"failed to parse {path}: {e}") from e
 
     items = _build_items(data.get("items", []), path)
-    suspension = _build_suspension(data.get("suspension", {}))
+    suspension = _build_suspension(data.get("suspension", {}), path)
 
     return BikeModel(
-        key=data["key"],
-        display_name=data["display_name"],
-        engine=data["engine"],
+        key=_require(data, "key", path),
+        display_name=_require(data, "display_name", path),
+        engine=_require(data, "engine", path),
         items=items,
         notes=data.get("notes", []),
         suspension=suspension,
