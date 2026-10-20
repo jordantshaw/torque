@@ -1,0 +1,25 @@
+key: test-bike-2
+display_name: Test Bike Two
+engine: "test"
+items:
+  - key: oil
+    category: Engine
+    name: Oil
+    every_hours: 20
+    action: C
+  - key: head_screws
+    category: Engine
+    name: Head screws
+    actions: {5: T}
+notes:
+  - "Free-text note."
+suspension:
+  settings:
+    - name: Fork compression (clicks out)
+      factory: "12"
+      racing: "8"
+      comfort: "12"
+      soft: "14"
+  fixed_values:
+    Fork spring: "0.40 kg"
+  source: "Caveat/source string shown verbatim in the UI."

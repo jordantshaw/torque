@@ -1,0 +1,13 @@
+key: test-bike-invalid
+display_name: Test Bike Invalid
+engine: "test"
+items:
+  - key: head_screws
+    category: Engine
+    name: Head screws
+    actions: {0: "C"}
+notes: []
+suspension:
+  settings: []
+  fixed_values: {}
+  source: "n/a"
