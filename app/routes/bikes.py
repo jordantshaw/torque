@@ -11,6 +11,7 @@ re-renders the same maintenance list after writing to the database.
 from datetime import date
 
 from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session
 
 from app.db import get_session
@@ -81,3 +82,41 @@ def bike_page(bike_id: int, request: Request, session: Session = Depends(get_ses
     return request.app.state.templates.TemplateResponse(
         request, "bike_maintenance.html", context
     )
+
+
+@bikes_router.get("/bikes/{bike_id}/edit")
+def edit_bike_form(bike_id: int, request: Request, session: Session = Depends(get_session)):
+    bike = get_bike_or_404(session, bike_id)
+    return request.app.state.templates.TemplateResponse(
+        request, "bike_edit.html", {"bike": bike, "error": None, "nickname": bike.nickname}
+    )
+
+
+@bikes_router.post("/bikes/{bike_id}")
+async def rename_bike(bike_id: int, request: Request, session: Session = Depends(get_session)):
+    bike = get_bike_or_404(session, bike_id)
+    form = await request.form()
+    nickname = str(form.get("nickname", ""))
+
+    if not nickname.strip():
+        return request.app.state.templates.TemplateResponse(
+            request,
+            "bike_edit.html",
+            {"bike": bike, "error": "Nickname is required.", "nickname": nickname},
+            status_code=400,
+        )
+
+    bike.nickname = nickname
+    session.commit()
+    return RedirectResponse(f"/bikes/{bike_id}/edit", status_code=303)
+
+
+@bikes_router.post("/bikes/{bike_id}/delete")
+def delete_bike(bike_id: int, session: Session = Depends(get_session)):
+    bike = get_bike_or_404(session, bike_id)
+    # Relies on the cascade="all, delete-orphan" relationships configured on
+    # Bike (rides, hours_events, service_records) to remove the bike's
+    # entire history along with it.
+    session.delete(bike)
+    session.commit()
+    return RedirectResponse("/", status_code=303)
