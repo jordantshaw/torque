@@ -1,0 +1,28 @@
+key: test-bike
+display_name: Test Bike
+engine: "test"
+items:
+  - key: oil
+    category: Engine
+    name: Oil
+    every_hours: 30
+    action: S
+  - key: connecting_rod
+    category: Engine
+    name: Connecting rod
+    actions: {90: S, 180: S}
+  - key: clutch_disks
+    category: Engine
+    name: Clutch disks
+    actions: {30: C, 60: C, 90: S, 120: C, 150: C, 180: S}
+notes: []
+suspension:
+  settings:
+    - name: Fork compression (clicks out)
+      factory: "9"
+      racing: "7"
+      comfort: "9"
+      soft: "11"
+  fixed_values:
+    Fork spring: "0.38 kg"
+  source: "Test fixture source."
