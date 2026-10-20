@@ -1,0 +1,54 @@
+<div id="maintenance-panel">
+  <p class="current-hours">Current hours: {{ current_hours }}</p>
+
+  {% if error %}
+  <p class="form-error">{{ error }}</p>
+  {% endif %}
+
+  {% for category, items in categories.items() %}
+  <section class="maintenance-category">
+    <h2>{{ category }}</h2>
+    <ul class="maintenance-items">
+      {% for item in items %}
+      <li class="maintenance-item status-{{ item.status|lower }}">
+        <div class="item-info">
+          <span class="item-name">{{ item.name }}</span>
+          <span class="item-status">
+            {% if item.status == "BEYOND_SCHEDULE" %}
+              Beyond schedule
+            {% else %}
+              {{ item.action }} @ {{ item.next_point }}h
+              {% if item.status == "DUE" %}&mdash; due ({{ item.hours_overdue }}h overdue)
+              {% elif item.status == "UPCOMING" %}&mdash; upcoming
+              {% endif %}
+            {% endif %}
+          </span>
+        </div>
+        {% if item.next_point is not none %}
+        <form class="complete-item-form" hx-post="/bikes/{{ bike.id }}/items/{{ item.key }}/complete" hx-target="#maintenance-panel" hx-swap="outerHTML">
+          <label>Date<input type="date" name="date" value="{{ today }}"></label>
+          <label>Hours<input type="number" name="hours" min="0" step="1" value="{{ current_hours }}"></label>
+          <label>Notes<input type="text" name="notes" placeholder="Optional"></label>
+          <button type="submit">Mark done</button>
+        </form>
+        {% endif %}
+      </li>
+      {% endfor %}
+    </ul>
+  </section>
+  {% endfor %}
+
+  {% if service_points %}
+  <section class="service-points">
+    <h2>Complete a full service point</h2>
+    {% for point in service_points %}
+    <form class="complete-point-form" hx-post="/bikes/{{ bike.id }}/service-points/{{ point }}/complete" hx-target="#maintenance-panel" hx-swap="outerHTML">
+      <label>Date<input type="date" name="date" value="{{ today }}"></label>
+      <label>Hours<input type="number" name="hours" min="0" step="1" value="{{ current_hours }}"></label>
+      <label>Notes<input type="text" name="notes" placeholder="Optional"></label>
+      <button type="submit">Complete all at {{ point }}h</button>
+    </form>
+    {% endfor %}
+  </section>
+  {% endif %}
+</div>

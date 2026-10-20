@@ -8,13 +8,16 @@ static assets and Jinja2 templates every page route builds on.
 
 from pathlib import Path
 
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException, Request
+from fastapi.exception_handlers import http_exception_handler
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
 from app.bike_models import load_bike_models
 from app.db import get_engine, get_sessionmaker, init_db
+from app.routes.bikes import bikes_router
 from app.routes.home import home_router
+from app.routes.maintenance import maintenance_router
 
 STATIC_DIR = Path(__file__).parent / "static"
 TEMPLATES_DIR = Path(__file__).parent / "templates"
@@ -36,5 +39,15 @@ def create_app(bike_models_dir: Path, database_url: str) -> FastAPI:
     app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
 
     app.include_router(home_router)
+    app.include_router(bikes_router)
+    app.include_router(maintenance_router)
+
+    @app.exception_handler(HTTPException)
+    async def not_found_handler(request: Request, exc: HTTPException):
+        if exc.status_code == 404:
+            return app.state.templates.TemplateResponse(
+                request, "404.html", {}, status_code=404
+            )
+        return await http_exception_handler(request, exc)
 
     return app

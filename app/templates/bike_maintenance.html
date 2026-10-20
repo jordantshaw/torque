@@ -1,0 +1,11 @@
+{% extends "bike_base.html" %}
+
+{% block tab_content %}
+<form class="hours-form" hx-post="/bikes/{{ bike.id }}/hours" hx-target="#maintenance-panel" hx-swap="outerHTML">
+  <label for="hours">Current engine hours</label>
+  <input type="number" id="hours" name="hours" min="0" step="1" value="{{ current_hours }}">
+  <button type="submit">Update hours</button>
+</form>
+
+{% include "_maintenance_list.html" %}
+{% endblock %}
