@@ -1,0 +1,212 @@
+key: beta-300-rr-race-2026
+display_name: "2026 Beta 300 RR Race"
+engine: "250/300"
+items:
+  # Engine
+  - key: gear_and_clutch_oil
+    category: Engine
+    name: Gear and clutch oil
+    actions: {3: S, 30: S, 60: S, 90: S, 120: S, 150: S, 180: S}
+  - key: spark_plug
+    category: Engine
+    name: Spark plug
+    actions: {3: C, 60: S, 120: S, 180: S}
+  - key: head_screws
+    category: Engine
+    name: Head screws
+    actions: {3: T}
+  - key: engine_clamping_screws_to_frame
+    category: Engine
+    name: Engine clamping screws to the frame
+    actions: {3: C, 30: C, 60: C, 90: C, 120: C, 150: C, 180: C}
+  - key: kick_start_and_gearchange_lever_screws
+    category: Engine
+    name: Kick start and gearchange lever screws
+    actions: {3: C, 30: C, 60: C, 90: C, 120: C, 150: C, 180: C}
+  - key: spark_plug_cap
+    category: Engine
+    name: Spark plug cap
+    actions: {3: P, 30: P, 60: P, 90: P, 120: P, 150: P, 180: P}
+  - key: driving_clutch_disks_coated
+    category: Engine
+    name: Driving clutch disks (coated)
+    actions: {30: C, 60: C, 90: S, 120: C, 150: C, 180: S}
+  - key: clutch_springs_length
+    category: Engine
+    name: Clutch springs length
+    actions: {30: C, 60: C, 90: S, 120: C, 150: C, 180: S}
+  - key: clutch_hub_clutch_bell
+    category: Engine
+    name: Clutch hub - clutch bell
+    actions: {30: C, 60: C, 90: C, 120: C, 150: C, 180: C}
+  - key: cylinder
+    category: Engine
+    name: Cylinder
+    actions: {60: C, 120: C, 180: C}
+  - key: piston_and_segments
+    category: Engine
+    name: Piston and segments
+    actions: {60: S, 120: S, 180: S}
+  - key: connecting_rod
+    category: Engine
+    name: Connecting rod
+    actions: {90: S, 180: S}
+  - key: drive_shaft_bearings_and_seals
+    category: Engine
+    name: Drive shaft bearings and seals
+    actions: {90: S, 180: S}
+  - key: gearbox_surface_appearance
+    category: Engine
+    name: Surface appearance of the gearbox
+    actions: {90: C, 180: C}
+  - key: gearbox_bearings_primary_shaft
+    category: Engine
+    name: Gearbox bearings (primary shaft)
+    actions: {90: S, 180: S}
+  - key: water_pump_oil_seal
+    category: Engine
+    name: Water pump oil seal
+    actions: {90: S, 180: S}
+  - key: exhaust_valve
+    category: Engine
+    name: Exhaust valve
+    actions: {60: "C/P", 150: "C/P"}
+  - key: reed_valve
+    category: Engine
+    name: Reed valve
+    actions: {60: C, 120: C, 180: C}
+  - key: silencer_noise_absorbing_material
+    category: Engine
+    name: Noise-absorbing material of the silencer
+    actions: {30: S, 60: S, 90: S, 120: S, 150: S, 180: S}
+
+  # Carburetor
+  - key: carb_tightness
+    category: Carburetor
+    name: Tightness
+    actions: {3: C, 30: C, 60: C, 90: C, 120: C, 150: C, 180: C}
+  - key: carb_idling_setting
+    category: Carburetor
+    name: Idling setting
+    actions: {3: C, 30: C, 60: C, 90: C, 120: C, 150: C, 180: C}
+  - key: carb_fuel_pipe
+    category: Carburetor
+    name: Fuel pipe
+    actions: {3: C, 30: C, 60: C, 90: C, 120: C, 150: C, 180: C}
+  - key: carb_breather_pipe
+    category: Carburetor
+    name: Breather pipe
+    actions: {3: C, 30: C, 60: C, 90: C, 120: C, 150: C, 180: C}
+
+  # Assembling groups
+  - key: coolant_system_tightness_and_level
+    category: Assembling groups
+    name: Coolant system tightness and level
+    actions: {3: C, 30: C, 60: C, 90: C, 120: C, 150: C, 180: C}
+  - key: exhaust_manifold_tightness
+    category: Assembling groups
+    name: Exhaust manifold tightness
+    actions: {3: C, 30: C, 60: C, 90: C, 120: C, 150: C, 180: C}
+  - key: drives_sliding_and_regulation
+    category: Assembling groups
+    name: Drives sliding and regulation
+    actions: {3: C, 30: C, 60: C, 90: C, 120: C, 150: C, 180: C}
+  - key: liquid_level_clutch_pump
+    category: Assembling groups
+    name: Liquid level clutch pump
+    actions: {3: C, 30: C, 60: C, 90: C, 120: C, 150: C, 180: C}
+  - key: final_transmission
+    category: Assembling groups
+    name: Final transmission
+    actions: {3: C, 30: C, 60: C, 90: C, 120: C, 150: C, 180: C}
+  - key: obd2_error_memory_read
+    category: Assembling groups
+    name: OBD2 error memory read
+    actions: {3: C, 30: C, 60: C, 90: C, 120: C, 150: C, 180: C}
+  - key: electric_system_blow_out_and_grease_connections
+    category: Assembling groups
+    name: Electric system (blow out and grease main connections)
+    actions: {3: C, 30: C, 60: C, 90: C, 120: C, 150: C, 180: C}
+  - key: battery_12v_check_recharge
+    category: Assembling groups
+    name: 12V battery check/recharge
+    actions: {3: C, 30: C, 60: C, 90: C, 120: C, 150: C, 180: C}
+  - key: airbox_and_air_filter
+    category: Assembling groups
+    name: Airbox and air filter
+    actions: {3: P, 30: P, 60: P, 90: P, 120: P, 150: P, 180: P}
+
+  # Brakes
+  - key: brakes_liquid_level_pads_thickness
+    category: Brakes
+    name: Liquid level, pads thickness
+    actions: {3: C, 30: C, 60: C, 90: C, 120: C, 150: C, 180: C}
+  - key: brakes_disc_thickness
+    category: Brakes
+    name: Disc thickness
+    actions: {3: C, 30: C, 60: C, 90: C, 120: C, 150: C, 180: C}
+  - key: brakes_pipe_tightness
+    category: Brakes
+    name: Pipe tightness
+    actions: {3: C, 30: C, 60: C, 90: C, 120: C, 150: C, 180: C}
+  - key: brakes_idle_travel_levers_and_drives_sliding
+    category: Brakes
+    name: Idle travel levers and drives sliding
+    actions: {3: C, 30: C, 60: C, 90: C, 120: C, 150: C, 180: C}
+
+  # Cycling
+  - key: cycling_chassis
+    category: Cycling
+    name: Chassis
+    actions: {3: C, 30: C, 60: C, 90: C, 120: C, 150: C, 180: C}
+  - key: cycling_swing_arm
+    category: Cycling
+    name: Swing arm
+    actions: {3: C, 30: C, 60: C, 90: C, 120: C, 150: C, 180: C}
+  - key: cycling_mobile_parts
+    category: Cycling
+    name: Mobile parts
+    actions: {3: C, 30: C, 60: C, 90: C, 120: C, 150: C, 180: C}
+  - key: cycling_shock_absorber_and_telescopic_fork
+    category: Cycling
+    name: Shock absorber and telescopic fork
+    actions: {3: C, 30: C, 60: C, 90: C, 120: C, 150: C, 180: C}
+  - key: cycling_rear_suspension_linkage
+    category: Cycling
+    name: Rear suspension linkage
+    actions: {3: C, 30: C, 60: C, 90: C, 120: C, 150: C, 180: C}
+  - key: cycling_fork_cover
+    category: Cycling
+    name: Fork cover
+    actions: {3: C, 30: C, 60: C, 90: C, 120: C, 150: C, 180: C}
+  - key: cycling_fuel_lines
+    category: Cycling
+    name: Fuel lines
+    actions: {3: C, 30: C, 60: C, 90: C, 120: C, 150: C, 180: C}
+  - key: cycling_bearings_of_steering
+    category: Cycling
+    name: Bearings of steering
+    actions: {3: C, 30: C, 60: C, 90: C, 120: C, 150: C, 180: C}
+  - key: cycling_bolts
+    category: Cycling
+    name: Bolts
+    actions: {3: C, 30: C, 60: C, 90: C, 120: C, 150: C, 180: C}
+
+  # Wheels
+  - key: wheels_spokes_and_rim_coaxiality
+    category: Wheels
+    name: Wheel spokes and rim coaxiality
+    actions: {3: C, 30: C, 60: C, 90: C, 120: C, 150: C, 180: C}
+  - key: wheels_tyres_wear_and_pressure
+    category: Wheels
+    name: Tyres (wear and pressure)
+    actions: {3: C, 30: C, 60: C, 90: C, 120: C, 150: C, 180: C}
+  - key: wheels_bearings_clearance
+    category: Wheels
+    name: Bearings clearance
+    actions: {3: C, 30: C, 60: C, 90: C, 120: C, 150: C, 180: C}
+
+notes:
+  - "After first 100 km, recheck rear sprocket, brake discs, brake calipers, pinion, brake pedal."
+
+suspension: {}
