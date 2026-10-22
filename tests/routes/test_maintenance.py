@@ -109,6 +109,24 @@ def test_complete_all_for_service_point_only_affects_items_with_that_point(clien
     assert item_keys == {"oil", "clutch_disks"}  # connecting_rod has no action at hour 30
 
 
+def test_complete_system_only_affects_that_category(client, db_session):
+    bike = _make_bike(db_session)
+    response = client.post(
+        f"/bikes/{bike.id}/service-points/30/complete",
+        data={"date": "2026-01-10", "hours": 30, "notes": "", "category": "Clutch"},
+    )
+    assert response.status_code == 200
+    item_keys = {r.item_key for r in db_session.query(ServiceRecord).filter_by(bike_id=bike.id).all()}
+    assert item_keys == {"clutch_disks"}  # oil is also due at 30, but it is an Engine item
+
+
+def test_each_system_offers_to_complete_its_remaining_items(client, db_session):
+    bike = _make_bike(db_session)
+    html = client.get(f"/bikes/{bike.id}").text
+    assert 'name="category" value="Clutch"' in html
+    assert 'name="category" value="Engine"' in html
+
+
 def _service_group(html: str, label: str) -> str:
     """The HTML of one service's group (from its heading to the next group)."""
     start = html.index(label)

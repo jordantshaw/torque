@@ -26,7 +26,8 @@ another site, so it works offline.
   history or delete it, one at a time or in bulk.
 - **Maintenance:** the manual's schedule as a list of services (3 hours,
   30 hours, ...). Each service is split by system, and each system holds the
-  items. Tick items off, or complete a whole service at once. Every item says
+  items. Tick items off, or complete a whole system (Engine, Brakes, ...) or a whole
+  service at once. Every item says
   what to do and which manual page it comes from.
 - **Rides:** log rides and suspension settings. Rides move the bike's reading
   forward, and you can also set the reading directly.

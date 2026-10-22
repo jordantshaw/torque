@@ -46,9 +46,10 @@
 {% endmacro %}
 
 {# The date / reading / notes form used both per item and per whole service. #}
-{% macro complete_form(action, css_class, button_label, point=none) %}
+{% macro complete_form(action, css_class, button_label, point=none, category=none) %}
 <form class="{{ css_class }}" hx-post="{{ action }}" hx-target="#maintenance-panel" hx-swap="outerHTML">
   {% if point is not none %}<input type="hidden" name="point" value="{{ point }}">{% endif %}
+  {% if category is not none %}<input type="hidden" name="category" value="{{ category }}">{% endif %}
   <label>Date<input type="date" name="date" value="{{ today }}"></label>
   <label>{{ unit.reading }}<input type="number" name="hours" min="0" step="any" value="{{ current_hours|amt_input }}"></label>
   <label class="grow">Notes<input type="text" name="notes" placeholder="Optional"></label>
@@ -137,6 +138,12 @@
             <span class="count">{% if todo and todo != total %}{{ todo }} of {{ total }} to do{% else %}{{ total }} item{{ "" if total == 1 else "s" }}{% endif %}</span>
           </summary>
           <div class="rows">
+            {% if g.point is not none and todo %}
+            <details class="complete-all complete-system">
+              <summary class="btn">{{ icon("check", 16) }}Complete all {{ todo }} {{ c.name }} remaining</summary>
+              {{ complete_form("/bikes/%s/service-points/%s/complete"|format(bike.id, g.point), "complete-point-form", "Complete %s at %s%s"|format(c.name, g.point|amt, unit.suffix), category=c.name) }}
+            </details>
+            {% endif %}
             {% for item in c["items"] %}{{ item_row(item) }}{% endfor %}
           </div>
         </details>

@@ -1,5 +1,6 @@
 """Maintenance tab actions: set the current reading, complete a single item,
-or complete every item due at a given service point.
+or complete every item due at a given service point (optionally only those in
+one system, such as Engine).
 
 Every POST here writes to the database (or rejects with an inline error and
 no write) and then re-renders `_maintenance_list.html` with fresh data, via
@@ -144,8 +145,13 @@ async def complete_service_point(
     if error is not None:
         return _render_panel(request, bike, error)
 
+    category = form.get("category")
     item_keys = items_for_service_point(
-        {item.key: item.schedule for item in bike_model.items},
+        {
+            item.key: item.schedule
+            for item in bike_model.items
+            if not category or item.category == category
+        },
         hour,
         recorded_points_by_item(bike.service_records),
     )
