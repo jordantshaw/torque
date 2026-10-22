@@ -1,15 +1,21 @@
 {% extends "base.html" %}
+{% from "_icons.html" import icon %}
 
 {% block title %}{{ bike.nickname }}{% endblock %}
 
 {% block content %}
-<h1>{{ bike.nickname }}</h1>
-<p class="bike-meta">{{ bike_model.display_name }} &middot; {{ current_hours }} hrs &middot; <a href="/bikes/{{ bike.id }}/edit" class="bike-edit-link">Edit</a></p>
+<header class="bike-head">
+  <div class="bike-head-main">
+    <h1>{{ bike.nickname }}</h1>
+    <p class="bike-meta">{{ bike_model.display_name }}<a href="/bikes/{{ bike.id }}/edit" class="bike-edit-link">{{ icon("pencil", 14) }}Edit bike</a></p>
+  </div>
+  {% include "_hour_meter.html" %}
+</header>
 
-<nav class="bike-tabs">
-  <a href="/bikes/{{ bike.id }}" class="bike-tab{% if request.url.path == '/bikes/' ~ bike.id %} active{% endif %}">Maintenance</a>
-  <a href="/bikes/{{ bike.id }}/rides" class="bike-tab{% if request.url.path == '/bikes/' ~ bike.id ~ '/rides' %} active{% endif %}">Rides</a>
-  <a href="/bikes/{{ bike.id }}/suspension" class="bike-tab{% if request.url.path == '/bikes/' ~ bike.id ~ '/suspension' %} active{% endif %}">Suspension</a>
+<nav class="bike-tabs" aria-label="Bike sections">
+  <a href="/bikes/{{ bike.id }}" class="bike-tab{% if request.url.path == '/bikes/' ~ bike.id %} active{% endif %}">{{ icon("wrench", 16) }}Maintenance</a>
+  <a href="/bikes/{{ bike.id }}/rides" class="bike-tab{% if request.url.path == '/bikes/' ~ bike.id ~ '/rides' %} active{% endif %}">{{ icon("route", 16) }}Rides</a>
+  <a href="/bikes/{{ bike.id }}/suspension" class="bike-tab{% if request.url.path == '/bikes/' ~ bike.id ~ '/suspension' %} active{% endif %}">{{ icon("sliders", 16) }}Suspension</a>
 </nav>
 
 {% block tab_content %}{% endblock %}

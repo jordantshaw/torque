@@ -1,64 +1,159 @@
+{% from "_icons.html" import icon, category_icon, ring %}
+{% macro row_line(row, has_body) %}
+{% if row.state == "beyond" %}<span class="check check-none" aria-hidden="true"></span>
+{% else %}<span class="check" role="img" aria-label="{{ 'Completed' if row.state == 'done' else 'Not done yet' }}">{% if row.state == "done" %}{{ icon("tick", 12) }}{% endif %}</span>{% endif %}
+<span class="row-name">{{ row.name }}</span>
+{% if row.state == "beyond" %}
+<span class="row-meta">Inspect by condition.</span>
+{% else %}
+<span class="chip">{{ row.action_label }}</span>
+{% if row.state == "done" %}<span class="row-meta">Done {{ row.record.completed_date }}</span>{% endif %}
+{% endif %}
+{% if has_body %}<span class="row-act">Details</span>{% endif %}
+{% endmacro %}
+
+{% macro item_row(row) %}
+{% set can_complete = row.point is not none and row.state != "done" %}
+{% set has_body = can_complete or row.history or row.description or row.schedule_page %}
+{% if has_body %}
+<details class="row status-{{ row.state }}" data-cat="{{ row.category }}">
+  <summary>{{ row_line(row, true) }}</summary>
+  <div class="row-body">
+    {% if row.description %}
+    <p class="row-desc">{{ row.description }}</p>
+    {% endif %}
+    {% if row.schedule_page or row.page %}
+    <p class="row-refs">Manual: {% if row.schedule_page %}schedule p. {{ row.schedule_page }}{% endif %}{% if row.schedule_page and row.page %}, {% endif %}{% if row.page %}how-to p. {{ row.page }}{% endif %}</p>
+    {% endif %}
+    {% if can_complete %}
+    {{ complete_form("/bikes/%s/items/%s/complete"|format(bike.id, row.key), "complete-item-form", "Mark done", row.point) }}
+    {% endif %}
+    {% if row.history %}
+    <ul class="item-history">
+      {% for record in row.history %}
+      <li class="item-history-entry">
+        {{ record.service_point|amt }}{{ unit.suffix }} service, completed {{ record.completed_date }} at {{ record.engine_hours|amt }}{{ unit.suffix }}
+        {% if record.notes %}<span class="history-notes">{{ record.notes }}</span>{% endif %}
+      </li>
+      {% endfor %}
+    </ul>
+    {% endif %}
+  </div>
+</details>
+{% else %}
+<div class="row status-{{ row.state }}" data-cat="{{ row.category }}"><div class="row-line">{{ row_line(row, false) }}</div></div>
+{% endif %}
+{% endmacro %}
+
+{# The date / reading / notes form used both per item and per whole service. #}
+{% macro complete_form(action, css_class, button_label, point=none) %}
+<form class="{{ css_class }}" hx-post="{{ action }}" hx-target="#maintenance-panel" hx-swap="outerHTML">
+  {% if point is not none %}<input type="hidden" name="point" value="{{ point }}">{% endif %}
+  <label>Date<input type="date" name="date" value="{{ today }}"></label>
+  <label>{{ unit.reading }}<input type="number" name="hours" min="0" step="any" value="{{ current_hours|amt_input }}"></label>
+  <label class="grow">Notes<input type="text" name="notes" placeholder="Optional"></label>
+  <button type="submit" class="btn btn-primary">{{ button_label }}</button>
+</form>
+{% endmacro %}
+
 <div id="maintenance-panel">
-  <p class="current-hours">Current hours: {{ current_hours }}</p>
+  <section class="tiles">
+    <div class="tile tile-health">
+      <div class="tile-ring">{{ ring(health_pct) }}</div>
+      <div>
+        <span class="tile-label">Service health</span>
+        <span class="tile-sub">{{ total_items - due_count - upcoming_count }} of {{ total_items }} items on track</span>
+      </div>
+    </div>
+    <div class="tile tile-due">
+      <span class="tile-icon">{{ icon("alert", 20) }}</span>
+      <span class="tile-num">{{ due_count }}</span>
+      <span class="tile-label">Overdue</span>
+    </div>
+    <div class="tile tile-soon">
+      <span class="tile-icon">{{ icon("clock", 20) }}</span>
+      <span class="tile-num">{{ upcoming_count }}</span>
+      <span class="tile-label">Coming up</span>
+      <span class="tile-sub">within {{ upcoming_window|amt(unit) }}{{ unit.suffix }}</span>
+    </div>
+    <div class="tile tile-next">
+      <span class="tile-icon">{{ icon("flag", 20) }}</span>
+      {% if next_service %}
+      <span class="tile-num">{{ next_service.point|amt }}<small>{{ unit.suffix|trim }}</small></span>
+      <span class="tile-label">Next service</span>
+      <span class="tile-sub">in {{ next_service.hours_until|amt }}{{ unit.suffix }}</span>
+      {% else %}
+      <span class="tile-num">&mdash;</span>
+      <span class="tile-label">Next service</span>
+      <span class="tile-sub">nothing scheduled</span>
+      {% endif %}
+    </div>
+  </section>
+
+  <form class="hours-bar" hx-post="/bikes/{{ bike.id }}/hours" hx-target="#maintenance-panel" hx-swap="outerHTML">
+    <label for="hours">
+      <span class="hours-bar-title">{{ unit.reading }}</span>
+      <span class="hours-bar-hint">Set the current reading</span>
+    </label>
+    <div class="inline-field">
+      <input type="number" id="hours" name="hours" min="0" step="any" value="{{ current_hours|amt_input }}">
+      <button type="submit" class="btn btn-primary">Update</button>
+    </div>
+  </form>
 
   {% if error %}
   <p class="form-error">{{ error }}</p>
   {% endif %}
 
-  {% for category, items in categories.items() %}
-  <section class="maintenance-category">
-    <h2>{{ category }}</h2>
-    <ul class="maintenance-items">
-      {% for item in items %}
-      <li class="maintenance-item status-{{ item.status|lower }}">
-        <div class="item-info">
-          <span class="item-name">{{ item.name }}</span>
-          <span class="item-status">
-            {% if item.status == "BEYOND_SCHEDULE" %}
-              Beyond schedule
-            {% else %}
-              {{ item.action }} @ {{ item.next_point }}h
-              {% if item.status == "DUE" %}&mdash; due ({{ item.hours_overdue }}h overdue)
-              {% elif item.status == "UPCOMING" %}&mdash; upcoming
-              {% endif %}
-            {% endif %}
-          </span>
-        </div>
-        {% if item.next_point is not none %}
-        <form class="complete-item-form" hx-post="/bikes/{{ bike.id }}/items/{{ item.key }}/complete" hx-target="#maintenance-panel" hx-swap="outerHTML">
-          <label>Date<input type="date" name="date" value="{{ today }}"></label>
-          <label>Hours<input type="number" name="hours" min="0" step="0.1" value="{{ current_hours }}"></label>
-          <label>Notes<input type="text" name="notes" placeholder="Optional"></label>
-          <button type="submit">Mark done</button>
-        </form>
+  <section class="maintenance-block">
+    <h2>Services <span class="count-chip">{{ service_groups|length }}</span></h2>
+    {% for g in service_groups %}
+    <details class="service status-{{ g.status }}"{% if g.status in ("due", "upcoming") %} open{% endif %}>
+      <summary class="service-head">
+        <span class="point-icon">{{ icon("flag", 16) }}</span>
+        <h3>{% if g.point is none %}Past the manual's schedule{% else %}{{ unit.service_label(g.point) }}{% endif %}</h3>
+        {% if g.status == "due" %}<span class="pill pill-due">{{ g.hours_overdue|amt }}{{ unit.suffix }} overdue</span>
+        {% elif g.status == "upcoming" %}<span class="pill pill-soon">in {{ g.hours_until|amt }}{{ unit.suffix }}</span>
+        {% elif g.status == "later" %}<span class="pill pill-muted">in {{ g.hours_until|amt }}{{ unit.suffix }}</span>
+        {% elif g.status == "done" %}<span class="pill pill-ok">Done</span>{% endif %}
+        <span class="count">{% if g.point is not none and g.pending and g.pending != g.count %}{{ g.pending }} of {{ g.count }} to do{% else %}{{ g.count }} item{{ "" if g.count == 1 else "s" }}{% endif %}</span>
+      </summary>
+      <div class="service-body">
+        {% if g.point is none %}
+        <p class="hint">The manual's schedule ends before this. Inspect these by condition.</p>
+        {% elif g.pending %}
+        <details class="complete-all">
+          <summary class="btn">{{ icon("check", 16) }}Complete all {{ g.pending }} remaining</summary>
+          {{ complete_form("/bikes/%s/service-points/%s/complete"|format(bike.id, g.point), "complete-point-form", "Complete all at %s%s"|format(g.point|amt, unit.suffix)) }}
+        </details>
         {% endif %}
-        {% if item.history %}
-        <ul class="item-history">
-          {% for record in item.history %}
-          <li class="item-history-entry">
-            {{ record.service_point }}h &mdash; completed {{ record.completed_date }} at {{ record.engine_hours }}h
-            {% if record.notes %}&mdash; {{ record.notes }}{% endif %}
-          </li>
-          {% endfor %}
-        </ul>
-        {% endif %}
-      </li>
-      {% endfor %}
-    </ul>
-  </section>
-  {% endfor %}
-
-  {% if service_points %}
-  <section class="service-points">
-    <h2>Complete a full service point</h2>
-    {% for point in service_points %}
-    <form class="complete-point-form" hx-post="/bikes/{{ bike.id }}/service-points/{{ point }}/complete" hx-target="#maintenance-panel" hx-swap="outerHTML">
-      <label>Date<input type="date" name="date" value="{{ today }}"></label>
-      <label>Hours<input type="number" name="hours" min="0" step="0.1" value="{{ current_hours }}"></label>
-      <label>Notes<input type="text" name="notes" placeholder="Optional"></label>
-      <button type="submit">Complete all at {{ point }}h</button>
-    </form>
+        {% for c in g.systems %}
+        <details class="category">
+          <summary>
+            <span class="cat-icon">{{ category_icon(c.name, 16) }}</span>
+            <span class="cat-name">{{ c.name }}</span>
+            {% set total = c["items"]|length %}
+            {% set todo = c["items"]|rejectattr("state", "equalto", "done")|list|length %}
+            <span class="count">{% if todo and todo != total %}{{ todo }} of {{ total }} to do{% else %}{{ total }} item{{ "" if total == 1 else "s" }}{% endif %}</span>
+          </summary>
+          <div class="rows">
+            {% for item in c["items"] %}{{ item_row(item) }}{% endfor %}
+          </div>
+        </details>
+        {% endfor %}
+      </div>
+    </details>
     {% endfor %}
   </section>
+
+  {% if bike_model.notes %}
+  <section class="maintenance-block">
+    <h2>Notes from the manual</h2>
+    <ul class="manual-notes">
+      {% for note in bike_model.notes %}<li>{{ note }}</li>{% endfor %}
+    </ul>
+  </section>
   {% endif %}
+
+  {% include "_hour_meter_oob.html" %}
 </div>

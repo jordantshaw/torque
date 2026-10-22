@@ -1,8 +1,57 @@
-/* Basic reset */
+/* Torque — dark app UI.
+   App shell: a sticky top bar, then the page.
+   Type: Manrope throughout. Sky blue is the interface accent; red, amber
+   and green are reserved for service status. */
+
+/* Manrope, bundled (SIL Open Font License; see /static/fonts/OFL.txt). */
+/* latin-ext */
+@font-face {
+  font-family: "Manrope";
+  font-style: normal;
+  font-weight: 400 800;
+  font-display: swap;
+  src: url("/static/fonts/manrope-latin-ext.woff2") format("woff2");
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+/* latin */
+@font-face {
+  font-family: "Manrope";
+  font-style: normal;
+  font-weight: 400 800;
+  font-display: swap;
+  src: url("/static/fonts/manrope-latin.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+:root {
+  --bg: #090d13;
+  --sidebar: #0c1119;
+  --panel: #111823;
+  --panel-2: #161f2c;
+  --field: #0b1017;
+  --line: #1d2836;
+  --line-2: #2a384a;
+  --text: #e8edf4;
+  --muted: #8896a9;
+  --accent: #38bdf8;
+  --accent-2: #22d3ee;
+  --accent-ink: #04141d;
+  --due: #f87171;
+  --soon: #fbbf24;
+  --ok: #4ade80;
+  --radius: 14px;
+  --font: "Manrope", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
 *,
 *::before,
 *::after {
   box-sizing: border-box;
+}
+
+[hidden] {
+  display: none !important;
 }
 
 body,
@@ -11,171 +60,1024 @@ h2,
 h3,
 p,
 ul,
-ol {
+ol,
+dl,
+dd {
   margin: 0;
   padding: 0;
 }
 
-/* Readable body defaults */
 body {
-  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  min-height: 100vh;
+  font-family: var(--font);
+  font-size: 0.9375rem;
   line-height: 1.5;
-  color: #1a1a1a;
-  background-color: #fff;
-  max-width: 48rem;
-  margin: 0 auto;
-  padding: 1.5rem;
+  color: var(--text);
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
 }
 
-/* Home page: bike list */
-.bike-list {
-  list-style: none;
-  margin: 1rem 0;
+a {
+  color: var(--accent);
 }
 
-.bike-row {
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+h1,
+h2,
+h3 {
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+}
+
+h1 {
+  font-size: 2rem;
+  font-weight: 800;
+}
+
+h2 {
   display: flex;
-  align-items: baseline;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 0.9rem;
+  font-size: 1.125rem;
+}
+
+.icon {
+  flex: none;
+}
+
+/* ---------- App shell: one top bar on every page ---------- */
+.app {
+  min-height: 100vh;
+}
+
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background: rgb(12 17 25 / 0.85);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--line);
+}
+
+.topbar-inner {
+  display: flex;
+  align-items: center;
   justify-content: space-between;
   gap: 1rem;
-  padding: 0.75rem 0;
-  border-bottom: 1px solid #e0e0e0;
+  max-width: 72rem;
+  margin: 0 auto;
+  padding: 0.7rem 2rem;
 }
 
-.bike-row a {
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  font-weight: 800;
+  font-size: 1.0625rem;
+  letter-spacing: -0.02em;
+  color: var(--text);
+  text-decoration: none;
+}
+
+.brand-mark {
+  display: grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  color: var(--accent-ink);
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  border-radius: 9px;
+}
+
+.topnav {
+  display: flex;
+  gap: 0.25rem;
+}
+
+.topnav-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.45rem 0.8rem;
+  font-weight: 600;
+  color: var(--muted);
+  text-decoration: none;
+  border-radius: 10px;
+}
+
+.topnav-link:hover {
+  color: var(--text);
+  background: var(--panel);
+}
+
+.topnav-link.active {
+  color: var(--text);
+  background: var(--panel-2);
+}
+
+.topnav-link.active .icon {
+  color: var(--accent);
+}
+
+.page {
+  width: 100%;
+  max-width: 72rem;
+  margin: 0 auto;
+  padding: 2rem 2rem 5rem;
+}
+
+.page-head,
+.bike-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.page-head {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.2rem;
+}
+
+.page-head-row {
+  flex-direction: row;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.bike-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  margin-top: 0.3rem;
+  color: var(--muted);
+}
+
+.bike-edit-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.bike-edit-link:hover {
+  text-decoration: underline;
+}
+
+.empty,
+.hint {
+  color: var(--muted);
+}
+
+.hint {
+  margin: -0.4rem 0 0.9rem;
+  font-size: 0.875rem;
+}
+
+/* ---------- Panels, forms, buttons ---------- */
+.panel {
+  padding: 1.4rem;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+
+.panel-danger {
+  margin-top: 1.5rem;
+  border-color: rgb(248 113 113 / 0.3);
+}
+
+.panel + .panel {
+  margin-top: 1.5rem;
+}
+
+.stack {
   display: flex;
   flex-direction: column;
-  text-decoration: none;
-  color: inherit;
+  gap: 0.4rem;
 }
 
-.bike-nickname {
+label {
+  display: block;
+  font-size: 0.8125rem;
   font-weight: 600;
+  color: var(--muted);
 }
 
-.bike-model {
-  font-size: 0.875rem;
-  color: #666;
+input,
+select {
+  display: block;
+  width: 100%;
+  margin-top: 0.3rem;
+  padding: 0.6rem 0.75rem;
+  font: inherit;
+  color: var(--text);
+  background: var(--field);
+  border: 1px solid var(--line-2);
+  border-radius: 10px;
+  color-scheme: dark;
 }
 
-.bike-hours,
-.bike-counts {
-  font-size: 0.875rem;
-  color: #444;
+input:focus,
+select:focus {
+  border-color: var(--accent);
+  outline: none;
+  box-shadow: 0 0 0 3px rgb(56 189 248 / 0.2);
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  padding: 0.6rem 1.1rem;
+  font: inherit;
+  font-weight: 700;
+  color: var(--text);
+  background: var(--panel-2);
+  border: 1px solid var(--line-2);
+  border-radius: 10px;
+  cursor: pointer;
+  text-decoration: none;
   white-space: nowrap;
 }
 
-/* Add-bike form */
-form label {
-  display: block;
-  margin-top: 0.75rem;
+.btn:hover {
+  border-color: var(--muted);
+}
+
+.btn-primary {
+  color: var(--accent-ink);
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  border-color: transparent;
+}
+
+.btn-primary:hover {
+  filter: brightness(1.08);
+}
+
+.btn-quiet {
+  padding: 0.3rem 0.7rem;
   font-weight: 600;
+  font-size: 0.875rem;
+  background: transparent;
 }
 
-form input,
-form select {
-  width: 100%;
-  padding: 0.5rem;
-  margin-top: 0.25rem;
+.btn-danger:hover {
+  color: var(--due);
+  border-color: var(--due);
 }
 
-form button {
-  margin-top: 1rem;
-  padding: 0.5rem 1rem;
+.btn-danger-solid {
+  color: #fff;
+  background: #dc4a4a;
+  border-color: #dc4a4a;
 }
 
 .form-error {
-  color: #b00020;
-  margin-top: 0.75rem;
+  margin: 0 0 1rem;
+  padding: 0.65rem 0.9rem;
+  color: var(--due);
+  background: rgb(248 113 113 / 0.1);
+  border: 1px solid rgb(248 113 113 / 0.35);
+  border-radius: 10px;
 }
 
-/* Bike page: tab nav */
-.bike-meta {
-  color: #666;
-  margin-top: 0.25rem;
+details > summary {
+  cursor: pointer;
+  list-style: none;
+}
+
+details > summary::-webkit-details-marker {
+  display: none;
+}
+
+.pill {
+  display: inline-block;
+  padding: 0.12rem 0.65rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  white-space: nowrap;
+  border-radius: 999px;
+}
+
+.pill-due {
+  color: var(--due);
+  background: rgb(248 113 113 / 0.14);
+}
+
+.pill-soon {
+  color: var(--soon);
+  background: rgb(251 191 36 / 0.14);
+}
+
+.pill-ok {
+  color: var(--ok);
+  background: rgb(74 222 128 / 0.12);
+}
+
+.count-chip {
+  padding: 0 0.55rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  line-height: 1.4rem;
+  color: var(--muted);
+  background: var(--panel-2);
+  border-radius: 999px;
+}
+
+/* ---------- Health ring ---------- */
+.ring {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.ring-track {
+  fill: none;
+  stroke: var(--line-2);
+  stroke-width: 9;
+}
+
+.ring-bar {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 9;
+  stroke-linecap: round;
+}
+
+.ring-text {
+  fill: var(--text);
+  font-family: var(--font);
+  font-size: 22px;
+  font-weight: 800;
+}
+
+.ring-ok {
+  color: var(--ok);
+}
+
+.ring-soon {
+  color: var(--soon);
+}
+
+.ring-due {
+  color: var(--due);
+}
+
+/* ---------- Home ---------- */
+.bike-list {
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(18rem, 1fr));
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.bike-list > li {
+  display: flex;
+}
+
+.bike-card {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  background: linear-gradient(160deg, var(--panel-2), var(--panel));
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  transition: border-color 0.15s;
+}
+
+.bike-card:hover,
+.bike-card:has(.bike-select:checked) {
+  border-color: var(--accent);
+}
+
+.bike-card:has(.bike-select:checked) {
+  box-shadow: 0 0 0 1px var(--accent);
+}
+
+.bike-card-link {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 1.25rem;
+  padding: 1.25rem 1.25rem 1rem;
+  color: inherit;
+  text-decoration: none;
+}
+
+.bike-card-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.5rem 0.75rem;
+  border-top: 1px solid var(--line);
+}
+
+.bike-card-actions form:first-of-type {
+  margin-left: auto;
+}
+
+.card-select,
+.select-all {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.card-select input,
+.select-all input {
+  width: 1.05rem;
+  height: 1.05rem;
+  margin: 0;
+  accent-color: var(--accent);
+}
+
+.bulk-bar {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+  padding: 0.5rem 0.75rem;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+
+.bulk-count {
+  font-size: 0.875rem;
+  color: var(--muted);
+}
+
+.bulk-actions {
+  display: flex;
+  gap: 0.25rem;
+  margin-left: auto;
+}
+
+.bulk-actions .btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.notice {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 1rem;
+  padding: 0.65rem 0.9rem;
+  font-weight: 600;
+  color: var(--ok);
+  background: rgb(74 222 128 / 0.08);
+  border: 1px solid rgb(74 222 128 / 0.25);
+  border-radius: 10px;
+}
+
+.bike-card-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.bike-card-title {
+  display: flex;
+  flex-direction: column;
+}
+
+.bike-nickname {
+  font-size: 1.375rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.bike-model {
+  color: var(--muted);
+}
+
+.bike-card-ring {
+  flex: none;
+  width: 4.5rem;
+  height: 4.5rem;
+}
+
+.bike-card-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-top: auto;
+  padding-top: 1rem;
+  border-top: 1px solid var(--line);
+}
+
+.bike-hours {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 1.125rem;
+  font-weight: 800;
+}
+
+.bike-hours .icon {
+  color: var(--accent);
+}
+
+.bike-hours small {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.bike-counts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+/* No JavaScript: the header link points at #add-bike, so show it on :target. */
+.add-bike[hidden]:target {
+  display: block !important;
+}
+
+.add-bike {
+  max-width: 40rem;
+  margin-bottom: 1.5rem;
+}
+
+.add-form {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  gap: 0.75rem;
+  align-items: end;
+}
+
+/* ---------- Bike header + tabs ---------- */
+.hour-meter {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.55rem 1.1rem 0.55rem 0.65rem;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+
+a.hour-meter {
+  color: inherit;
+  text-decoration: none;
+}
+
+a.hour-meter:hover {
+  border-color: var(--accent);
+}
+
+.hour-meter-edit {
+  margin-left: 0.25rem;
+  color: var(--muted);
+}
+
+a.hour-meter:hover .hour-meter-edit {
+  color: var(--accent);
+}
+
+.hour-meter-icon {
+  display: grid;
+  place-items: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  color: var(--accent);
+  background: rgb(56 189 248 / 0.12);
+  border-radius: 10px;
+}
+
+.hour-meter-text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.15;
+}
+
+.hour-meter-value {
+  font-size: 1.5rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.hour-meter-unit {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--muted);
 }
 
 .bike-tabs {
   display: flex;
-  gap: 1rem;
-  margin-top: 1rem;
-  border-bottom: 1px solid #e0e0e0;
+  gap: 0.25rem;
+  margin-bottom: 1.5rem;
+  border-bottom: 1px solid var(--line);
 }
 
 .bike-tab {
-  display: inline-block;
-  padding: 0.5rem 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: -1px;
+  padding: 0.7rem 1rem;
+  font-weight: 600;
+  color: var(--muted);
   text-decoration: none;
-  color: #666;
   border-bottom: 2px solid transparent;
 }
 
+.bike-tab:hover {
+  color: var(--text);
+}
+
 .bike-tab.active {
-  color: #1a1a1a;
-  font-weight: 600;
-  border-bottom-color: #1a1a1a;
+  color: var(--text);
+  border-bottom-color: var(--accent);
 }
 
-/* Maintenance tab */
-.hours-form {
+.bike-tab.active .icon {
+  color: var(--accent);
+}
+
+/* ---------- Maintenance: stat tiles ---------- */
+.tiles {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr 1fr 1fr;
+  gap: 1rem;
+  margin-bottom: 1.75rem;
+}
+
+.tile {
+  position: relative;
   display: flex;
-  align-items: flex-end;
-  gap: 0.75rem;
-  margin-top: 1rem;
+  flex-direction: column;
+  gap: 0.1rem;
+  padding: 1.1rem 1.2rem;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  overflow: hidden;
 }
 
-.hours-form label {
-  flex: 1;
+.tile-health {
+  flex-direction: row;
+  align-items: center;
+  gap: 1rem;
 }
 
-.current-hours {
-  margin-top: 1rem;
-  font-weight: 600;
+.tile-ring {
+  flex: none;
+  width: 4.5rem;
+  height: 4.5rem;
 }
 
-.maintenance-category {
-  margin-top: 1.5rem;
+.tile-icon {
+  display: grid;
+  place-items: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  margin-bottom: 0.5rem;
+  border-radius: 10px;
 }
 
-.maintenance-items {
-  list-style: none;
-  margin-top: 0.5rem;
+.tile-due .tile-icon {
+  color: var(--due);
+  background: rgb(248 113 113 / 0.14);
 }
 
-.maintenance-item {
+.tile-soon .tile-icon {
+  color: var(--soon);
+  background: rgb(251 191 36 / 0.14);
+}
+
+.tile-next .tile-icon {
+  color: var(--accent);
+  background: rgb(56 189 248 / 0.14);
+}
+
+.tile-num {
+  font-size: 2rem;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+}
+
+.tile-num small {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--muted);
+}
+
+.tile-label {
+  display: block;
+  margin-top: 0.25rem;
+  font-weight: 700;
+}
+
+.tile-sub {
+  display: block;
+  font-size: 0.8125rem;
+  color: var(--muted);
+}
+
+/* ---------- Maintenance: sections ---------- */
+.hours-bar {
   display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
+  align-items: center;
   justify-content: space-between;
-  gap: 0.75rem;
-  padding: 0.75rem 0;
-  border-bottom: 1px solid #e0e0e0;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 1.75rem;
+  padding: 0.9rem 1.1rem;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
 }
 
-.item-info {
+.hours-bar label {
   display: flex;
   flex-direction: column;
 }
 
-.item-name {
+.hours-bar-title {
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.hours-bar-hint {
+  font-size: 0.8125rem;
+  font-weight: 500;
+}
+
+.hours-bar .inline-field {
+  flex: 0 1 22rem;
+}
+
+.hours-bar .inline-field input {
+  margin-top: 0;
+}
+
+.service {
+  margin-bottom: 0.75rem;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.service.status-due {
+  border-left: 3px solid var(--due);
+}
+
+.service.status-upcoming {
+  border-left: 3px solid var(--soon);
+}
+
+.service.status-done {
+  border-left: 3px solid var(--ok);
+}
+
+.service-head {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.9rem 1.1rem;
+}
+
+.service-head:hover {
+  background: var(--panel-2);
+}
+
+.service-head h3 {
+  font-size: 1rem;
+}
+
+.service-head::after {
+  content: "+";
+  order: 3;
+  color: var(--muted);
+}
+
+.service[open] > .service-head::after {
+  content: "\2212";
+}
+
+.service-head .count {
+  margin-left: auto;
+  order: 2;
+  font-size: 0.8125rem;
+  color: var(--muted);
+}
+
+.service[open] > .service-head {
+  border-bottom: 1px solid var(--line);
+}
+
+.service-body {
+  display: grid;
+  gap: 0.5rem;
+  padding: 0.9rem;
+}
+
+.service .category {
+  margin-bottom: 0;
+  background: var(--panel-2);
+}
+
+.service .category .rows {
+  background: var(--panel);
+}
+
+.complete-all > summary {
+  color: var(--accent);
+  border-color: rgb(56 189 248 / 0.4);
+}
+
+.complete-all > summary:hover {
+  background: rgb(56 189 248 / 0.1);
+}
+
+.complete-all[open] > summary {
+  margin-bottom: 0.6rem;
+}
+
+.pill-muted {
+  color: var(--muted);
+  background: var(--panel-2);
+}
+
+.cat-name {
+  font-weight: 700;
+}
+
+.maintenance-block {
+  margin-bottom: 2rem;
+}
+
+.manual-notes {
+  display: grid;
+  gap: 0.6rem;
+  list-style: none;
+}
+
+.manual-notes li {
+  padding: 0.75rem 1rem;
+  color: var(--muted);
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--accent);
+  border-radius: 10px;
+}
+
+.point-icon {
+  display: grid;
+  place-items: center;
+  width: 1.9rem;
+  height: 1.9rem;
+  color: var(--accent);
+  background: rgb(56 189 248 / 0.12);
+  border-radius: 8px;
+}
+
+/* Item rows: one compact line, expands in place */
+.rows {
+  display: grid;
+}
+
+.row {
+  border-bottom: 1px solid var(--line);
+}
+
+.rows > .row:last-child,
+.rows > details.row:last-child:not([open]) {
+  border-bottom: 0;
+}
+
+.row > summary,
+.row-line {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.7rem 1.1rem;
+}
+
+.row > summary:hover {
+  background: var(--panel-2);
+}
+
+.check {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 1.2rem;
+  height: 1.2rem;
+  color: transparent;
+  border: 2px solid var(--line-2);
+  border-radius: 6px;
+}
+
+.check .icon {
+  stroke-width: 3.5;
+}
+
+.check-none {
+  border-style: dashed;
+  opacity: 0.6;
+}
+
+.status-due .check {
+  border-color: var(--due);
+}
+
+.status-upcoming .check {
+  border-color: var(--soon);
+}
+
+.status-done .check {
+  color: #04210f;
+  background: var(--ok);
+  border-color: var(--ok);
+}
+
+.status-done .row-name {
+  color: var(--muted);
+  text-decoration: line-through;
+  text-decoration-color: var(--line-2);
+}
+
+.row-name {
+  color: var(--muted);
+}
+
+.row-name {
   font-weight: 600;
 }
 
-.item-status {
+.chip {
+  padding: 0.05rem 0.55rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--accent);
+  background: rgb(56 189 248 / 0.12);
+  border-radius: 6px;
+  white-space: nowrap;
+}
+
+.row-meta {
   font-size: 0.875rem;
-  color: #444;
+  color: var(--muted);
 }
 
-.status-due .item-status {
-  color: #b00020;
+.row-act {
+  margin-left: auto;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: var(--accent);
+  white-space: nowrap;
 }
 
-.status-upcoming .item-status {
-  color: #a86b00;
+.row > summary:hover .row-act {
+  text-decoration: underline;
 }
 
-.status-beyond_schedule .item-status {
-  color: #666;
+.row-body {
+  padding: 0 1.1rem 1rem 2.45rem;
+}
+
+.row-desc {
+  max-width: 62ch;
+  margin-bottom: 0.75rem;
+  color: var(--text);
+  opacity: 0.85;
+}
+
+.row-refs {
+  margin-bottom: 0.75rem;
+  font-size: 0.8125rem;
+  color: var(--muted);
 }
 
 .complete-item-form,
@@ -183,104 +1085,363 @@ form button {
   display: flex;
   flex-wrap: wrap;
   align-items: flex-end;
-  gap: 0.5rem;
+  gap: 0.6rem;
+  padding: 0.9rem;
+  background: var(--field);
+  border: 1px solid var(--line);
+  border-radius: 10px;
 }
 
 .complete-item-form label,
 .complete-point-form label {
-  font-size: 0.8rem;
-  color: #444;
+  flex: 0 1 9rem;
 }
 
-.complete-item-form input,
-.complete-point-form input {
-  display: block;
-  padding: 0.35rem;
-}
-
-.service-points {
-  margin-top: 1.5rem;
-  border-top: 1px solid #e0e0e0;
-  padding-top: 1rem;
-}
-
-/* Rides tab */
-.log-ride {
-  margin-top: 1rem;
-}
-
-.ride-form .suspension-fields {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.75rem;
-  margin-top: 1rem;
-  padding: 0.75rem;
-  border: 1px solid #e0e0e0;
-}
-
-.ride-form .suspension-fields legend {
-  font-weight: 600;
-  padding: 0 0.25rem;
-}
-
-.ride-form .suspension-fields label {
+.complete-item-form label.grow,
+.complete-point-form label.grow {
   flex: 1 1 10rem;
-  margin-top: 0;
-  font-size: 0.8rem;
-  color: #444;
 }
 
-.cancel-link {
-  display: inline-block;
-  margin-top: 1rem;
-  margin-left: 0.75rem;
-  color: #666;
-}
-
-.rides-history {
-  margin-top: 1.5rem;
-  border-top: 1px solid #e0e0e0;
-  padding-top: 1rem;
-}
-
-.rides-list {
+.item-history {
   list-style: none;
-  margin-top: 0.5rem;
+  margin-top: 0.75rem;
+  padding-left: 0.75rem;
+  border-left: 2px solid var(--line-2);
+  font-size: 0.875rem;
+  color: var(--muted);
 }
 
-.ride-item {
+.item-history-entry + .item-history-entry {
+  margin-top: 0.3rem;
+}
+
+.history-notes {
+  display: block;
+  color: var(--text);
+}
+
+.category {
+  margin-bottom: 0.6rem;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.category > summary {
   display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  justify-content: space-between;
+  align-items: center;
   gap: 0.75rem;
-  padding: 0.75rem 0;
-  border-bottom: 1px solid #e0e0e0;
+  padding: 0.8rem 1.1rem;
+  font-weight: 700;
 }
 
-.ride-info {
-  display: flex;
-  gap: 0.75rem;
+.category > summary:hover {
+  background: var(--panel-2);
 }
 
-.ride-hours {
-  font-weight: 600;
+.category > summary::after {
+  content: "+";
+  order: 2;
+  color: var(--muted);
 }
 
-.ride-notes {
-  color: #666;
+.category[open] > summary::after {
+  content: "\2212";
 }
 
-.ride-actions {
+.category > summary .count {
+  margin-left: auto;
+  order: 1;
+  padding: 0 0.55rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--muted);
+  background: var(--panel-2);
+  border-radius: 999px;
+}
+
+.category[open] > summary {
+  border-bottom: 1px solid var(--line);
+}
+
+.cat-icon {
+  display: grid;
+  place-items: center;
+  width: 1.9rem;
+  height: 1.9rem;
+  color: var(--muted);
+  background: var(--panel-2);
+  border-radius: 8px;
+}
+
+.inline-field {
   display: flex;
   gap: 0.5rem;
 }
 
-.ride-delete-form {
-  display: inline;
+.inline-field input {
+  flex: 1;
+  min-width: 0;
 }
 
-.rides-empty {
-  color: #666;
-  padding: 0.75rem 0;
+/* ---------- Rides ---------- */
+.rides-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 24rem) minmax(0, 1fr);
+  gap: 1.75rem;
+  align-items: start;
+}
+
+.rides-grid > .panel {
+  grid-column: 1;
+  grid-row: 1;
+  margin: 0;
+  position: sticky;
+  top: 1.25rem;
+}
+
+.rides-history {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+.ride-form {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.suspension-fields {
+  background: var(--field);
+  border: 1px solid var(--line-2);
+  border-radius: 10px;
+}
+
+.suspension-fields > summary {
+  padding: 0.6rem 0.8rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--accent);
+}
+
+.suspension-fields[open] > summary {
+  border-bottom: 1px solid var(--line);
+}
+
+.suspension-fields label {
+  margin: 0.75rem 0.8rem 0;
+}
+
+.suspension-fields label:last-child {
+  margin-bottom: 0.8rem;
+}
+
+.ride-form .btn {
+  justify-self: start;
+}
+
+.rides-list {
+  list-style: none;
+  display: grid;
+  gap: 0.5rem;
+}
+
+.ride-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.8rem 1rem;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+
+.ride-item.ride-editing {
+  display: block;
+}
+
+.ride-info {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.25rem 1rem;
+}
+
+.ride-date {
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.ride-hours {
+  font-size: 1.125rem;
+  font-weight: 800;
+}
+
+.ride-actions {
+  display: flex;
+  gap: 0.375rem;
+}
+
+.rides-list > .empty {
+  padding: 1rem 0;
+}
+
+/* ---------- Suspension ---------- */
+.table-wrap {
+  overflow-x: auto;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+
+.suspension-settings {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.suspension-settings th,
+.suspension-settings td {
+  padding: 0.75rem 1rem;
+  text-align: left;
+  border-bottom: 1px solid var(--line);
+  font-variant-numeric: tabular-nums;
+}
+
+.suspension-settings th {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: var(--muted);
+  background: var(--panel-2);
+}
+
+.suspension-settings tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.suspension-settings td:first-child {
+  font-weight: 600;
+}
+
+.fixed-values {
+  margin-top: 2rem;
+}
+
+.fixed-values dl {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 0.5rem 2rem;
+  padding: 1.1rem 1.25rem;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+
+.fixed-values dt {
+  color: var(--muted);
+}
+
+.fixed-values dd {
+  font-weight: 600;
+}
+
+.source {
+  margin-top: 1.5rem;
+  font-size: 0.875rem;
+  color: var(--muted);
+}
+
+.source strong {
+  margin-right: 0.4rem;
+  color: var(--text);
+}
+
+.back-link {
+  display: inline-block;
+  margin-bottom: 0.75rem;
+  color: var(--muted);
+  text-decoration: none;
+}
+
+.back-link:hover {
+  color: var(--text);
+}
+
+.page > h1 {
+  margin-bottom: 1.25rem;
+}
+
+.page > .panel,
+.panel-danger {
+  max-width: 34rem;
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 64rem) {
+  .tiles {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .tile-health,
+.tile-next {
+    grid-column: 1 / -1;
+  }
+
+  .rides-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .rides-grid > .panel,
+.rides-history {
+    grid-column: 1;
+    grid-row: auto;
+    position: static;
+  }
+}
+
+@media (max-width: 48rem) {
+  .topbar-inner {
+    padding: 0.6rem 1rem;
+  }
+
+  .page {
+    padding: 1.25rem 1rem 4rem;
+  }
+
+  h1 {
+    font-size: 1.625rem;
+  }
+
+  .bike-head {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .add-form {
+    grid-template-columns: 1fr;
+  }
+
+  .row > summary,
+.row-line {
+    flex-wrap: wrap;
+    row-gap: 0.2rem;
+  }
+
+  .row > summary .row-act {
+    flex-basis: 100%;
+    margin-left: 1.35rem;
+  }
+
+  
+
+  .row-body {
+    padding-left: 1.1rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+    animation: none !important;
+  }
 }

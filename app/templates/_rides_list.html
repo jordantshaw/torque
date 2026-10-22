@@ -1,7 +1,5 @@
-<div id="rides-panel">
-  <p class="current-hours">Current hours: {{ current_hours }}</p>
-
-  <section class="log-ride">
+<div id="rides-panel" class="rides-grid">
+  <section class="panel">
     <h2>Log a ride</h2>
     {% include "_ride_form.html" %}
   </section>
@@ -13,19 +11,20 @@
       <li id="ride-{{ ride.id }}" class="ride-item">
         <div class="ride-info">
           <span class="ride-date">{{ ride.date }}</span>
-          <span class="ride-hours">{{ ride.hours }}h</span>
+          <span class="ride-hours">{{ ride.hours|amt }}{{ unit.suffix }}</span>
           {% if ride.notes %}<span class="ride-notes">{{ ride.notes }}</span>{% endif %}
         </div>
         <div class="ride-actions">
-          <button type="button" class="ride-edit-btn" hx-get="/bikes/{{ bike.id }}/rides/{{ ride.id }}/edit" hx-target="#ride-{{ ride.id }}" hx-swap="outerHTML">Edit</button>
+          <button type="button" class="btn btn-quiet ride-edit-btn" hx-get="/bikes/{{ bike.id }}/rides/{{ ride.id }}/edit" hx-target="#ride-{{ ride.id }}" hx-swap="outerHTML">Edit</button>
           <form class="ride-delete-form" hx-post="/bikes/{{ bike.id }}/rides/{{ ride.id }}/delete" hx-target="#rides-panel" hx-swap="outerHTML" hx-confirm="Delete this ride?">
-            <button type="submit">Delete</button>
+            <button type="submit" class="btn btn-quiet btn-danger">Delete</button>
           </form>
         </div>
       </li>
       {% else %}
-      <li class="rides-empty">No rides logged yet.</li>
+      <li class="empty">No rides logged yet. Log your first ride above.</li>
       {% endfor %}
     </ul>
   </section>
+  {% include "_hour_meter_oob.html" %}
 </div>

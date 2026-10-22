@@ -3,23 +3,28 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{% block title %}Moto Maintenance{% endblock %}</title>
+  <title>{% block title %}Torque{% endblock %}</title>
+  <meta name="color-scheme" content="dark">
   <link rel="stylesheet" href="/static/style.css">
-  <script src="/static/htmx.min.js"></script>
-  <script>
-    // Override htmx's default responseHandling so 4xx/5xx responses still
-    // swap their body into the DOM (while still firing htmx:responseError).
-    // Without this, routes that re-render a partial with a 400 to show
-    // inline validation errors never update the page, since htmx's default
-    // treats all 4xx/5xx as non-swappable errors.
-    htmx.config.responseHandling = [
-      {code: "204", swap: false},
-      {code: "[23]..", swap: true},
-      {code: "[45]..", swap: true, error: true}
-    ];
-  </script>
+  <script src="/static/htmx.min.js" defer></script>
+  <script src="/static/app.js" defer></script>
 </head>
 <body>
-  {% block content %}{% endblock %}
+  {% from "_icons.html" import icon %}
+  {% set on_garage = request.url.path == "/" %}
+  <div class="app">
+    <header class="topbar">
+      <div class="topbar-inner">
+        <a href="/" class="brand"><span class="brand-mark">{{ icon("wrench", 18) }}</span>Torque</a>
+        <nav class="topnav" aria-label="Main">
+          <a href="/" class="topnav-link{% if on_garage %} active{% endif %}">{{ icon("home", 16) }}<span>Garage</span></a>
+        </nav>
+      </div>
+    </header>
+    <main class="page">
+      {% block content %}{% endblock %}
+    </main>
+  </div>
+  {% block scripts %}{% endblock %}
 </body>
 </html>

@@ -11,15 +11,26 @@ Letting these drift apart -- an orphaned event, a duplicate, or a ride with
 none -- would make the bike's hours total silently wrong.
 """
 
+import math
 from datetime import date
+from typing import NamedTuple
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
 
 from app.db import get_session
 from app.models import Bike, HoursEvent, Ride
-from app.routes.bikes import get_bike_or_404
-from app.services.hours import HoursEventInput, current_hours
+from app.routes.common import (
+    MAX_READING,
+    BikeId,
+    RideId,
+    get_bike_or_404,
+    parse_date,
+    parse_notes,
+    parse_reading,
+    unit_of,
+)
+from app.services.hours import current_hours_of
 
 rides_router = APIRouter()
 
@@ -39,21 +50,13 @@ SUSPENSION_FIELDS = tuple(SUSPENSION_FIELD_BY_SETTING_NAME.values())
 SAG_FIELDS = ("sag_static", "sag_rider")
 
 
-def get_ride_or_404(session: Session, bike_id: int, ride_id: int) -> Ride:
+def get_ride_or_404(session: Session, bike_id: BikeId, ride_id: int) -> Ride:
     """Look up a `Ride` by id, raising `HTTPException(404)` if it doesn't
     exist or belongs to a different bike."""
     ride = session.get(Ride, ride_id)
     if ride is None or ride.bike_id != bike_id:
         raise HTTPException(status_code=404)
     return ride
-
-
-def _current_hours(bike: Bike) -> float:
-    events = [
-        HoursEventInput(id=e.id, date=e.date, kind=e.kind, hours=e.hours)
-        for e in bike.hours_events
-    ]
-    return current_hours(events)
 
 
 def _most_recent_ride(bike: Bike) -> Ride | None:
@@ -86,55 +89,52 @@ def _default_form_values(bike: Bike, bike_model) -> dict:
     return values
 
 
-def _parse_hours(raw) -> tuple[float | None, str | None]:
-    """Parse a ride's `hours` form value. Unlike a direct "set hours" entry
-    elsewhere in the app, a ride's hours must be strictly greater than
-    zero -- a ride with zero hours didn't happen. Fractional hours (e.g.
-    1.5) are allowed."""
-    try:
-        hours = float(raw)
-    except (TypeError, ValueError):
-        return None, "Hours must be a number."
-    if hours <= 0:
-        return None, "Hours must be greater than zero."
-    return hours, None
+class RideInput(NamedTuple):
+    """A ride's validated form fields, in the stored unit."""
+
+    length: float
+    date: str
+    notes: str | None
 
 
-def _parse_date(raw: str) -> tuple[str | None, str | None]:
-    """Validate a form `date` value is a parseable ISO date, returning
-    (date_string, error)."""
-    if not raw:
-        return None, "Date is required."
-    try:
-        date.fromisoformat(raw)
-    except ValueError:
-        return None, "Date must be a valid date."
-    return raw, None
+def _parse_ride(form, unit) -> tuple[RideInput | None, str | None]:
+    """A ride's length, date and notes, as (fields, error). A ride has to cover
+    something, so zero is rejected."""
+    length, error = parse_reading(form.get("hours"), unit, unit.ride_label, allow_zero=False)
+    if error is not None:
+        return None, error
+    date_str, error = parse_date(str(form.get("date", "")))
+    if error is not None:
+        return None, error
+    notes, error = parse_notes(form.get("notes"))
+    if error is not None:
+        return None, error
+    return RideInput(length, date_str, notes), None
 
 
-def _parse_optional_int(raw) -> int | None:
+def _parse_optional_number(raw, *, integer: bool) -> int | float | None:
+    """An optional suspension setting. Blank, non-numeric, non-finite and
+    out-of-range values are treated as "not given"."""
     if raw is None or raw == "":
         return None
     try:
-        return int(raw)
+        value = int(raw) if integer else float(raw)
     except (TypeError, ValueError):
         return None
-
-
-def _parse_optional_float(raw) -> float | None:
-    if raw is None or raw == "":
+    if not math.isfinite(value) or abs(value) > MAX_READING:
         return None
-    try:
-        return float(raw)
-    except (TypeError, ValueError):
-        return None
+    return value
 
 
 def _suspension_fields_from_form(form) -> dict:
-    fields = {f: _parse_optional_int(form.get(f)) for f in SUSPENSION_FIELDS if f != "shock_hsc"}
-    fields["shock_hsc"] = _parse_optional_float(form.get("shock_hsc"))
+    fields = {
+        f: _parse_optional_number(form.get(f), integer=True)
+        for f in SUSPENSION_FIELDS
+        if f != "shock_hsc"
+    }
+    fields["shock_hsc"] = _parse_optional_number(form.get("shock_hsc"), integer=False)
     for field in SAG_FIELDS:
-        fields[field] = _parse_optional_int(form.get(field))
+        fields[field] = _parse_optional_number(form.get(field), integer=True)
     return fields
 
 
@@ -160,8 +160,9 @@ def _list_context(
     return {
         "bike": bike,
         "bike_model": bike_model,
+        "unit": unit_of(request, bike),
         "rides": rides,
-        "current_hours": _current_hours(bike),
+        "current_hours": current_hours_of(bike.hours_events),
         "error": error,
         "values": form_values,
         "action": f"/bikes/{bike.id}/rides",
@@ -181,7 +182,7 @@ def _render_list(
 
 
 @rides_router.get("/bikes/{bike_id}/rides")
-def rides_tab(bike_id: int, request: Request, session: Session = Depends(get_session)):
+def rides_tab(bike_id: BikeId, request: Request, session: Session = Depends(get_session)):
     bike = get_bike_or_404(session, bike_id)
     bike_model = request.app.state.bike_models[bike.model_key]
     context = _list_context(request, bike, bike_model)
@@ -189,47 +190,44 @@ def rides_tab(bike_id: int, request: Request, session: Session = Depends(get_ses
 
 
 @rides_router.post("/bikes/{bike_id}/rides")
-async def create_ride(bike_id: int, request: Request, session: Session = Depends(get_session)):
+async def create_ride(bike_id: BikeId, request: Request, session: Session = Depends(get_session)):
     bike = get_bike_or_404(session, bike_id)
     bike_model = request.app.state.bike_models[bike.model_key]
     form = await request.form()
 
-    hours, error = _parse_hours(form.get("hours"))
-    date_str = None
-    if error is None:
-        date_str, error = _parse_date(str(form.get("date", "")))
-
+    fields, error = _parse_ride(form, unit_of(request, bike))
     if error is not None:
         return _render_list(request, bike, bike_model, error=error, form_values=_submitted_form_values(form))
 
-    notes = str(form.get("notes", "") or "") or None
     ride = Ride(
         bike_id=bike.id,
-        date=date_str,
-        hours=hours,
-        notes=notes,
+        date=fields.date,
+        hours=fields.length,
+        notes=fields.notes,
         **_suspension_fields_from_form(form),
     )
     session.add(ride)
     session.flush()  # assign ride.id before the linked HoursEvent references it
-    session.add(HoursEvent(bike_id=bike.id, date=date_str, kind="ride", hours=hours, ride_id=ride.id))
+    session.add(HoursEvent(bike_id=bike.id, date=fields.date, kind="ride", hours=fields.length, ride_id=ride.id))
     session.commit()
 
     return _render_list(request, bike, bike_model)
 
 
 @rides_router.get("/bikes/{bike_id}/rides/{ride_id}/edit")
-def edit_ride_form(bike_id: int, ride_id: int, request: Request, session: Session = Depends(get_session)):
-    get_bike_or_404(session, bike_id)
+def edit_ride_form(bike_id: BikeId, ride_id: RideId, request: Request, session: Session = Depends(get_session)):
+    bike = get_bike_or_404(session, bike_id)
     ride = get_ride_or_404(session, bike_id, ride_id)
+    unit = unit_of(request, bike)
 
     values = {
         "date": ride.date,
-        "hours": ride.hours,
+        "hours": unit.edit_value(ride.hours),
         "notes": ride.notes or "",
         **{field: getattr(ride, field) for field in (*SUSPENSION_FIELDS, *SAG_FIELDS)},
     }
     context = {
+        "unit": unit,
         "error": None,
         "values": values,
         "action": f"/bikes/{bike_id}/rides/{ride.id}",
@@ -244,17 +242,13 @@ def edit_ride_form(bike_id: int, ride_id: int, request: Request, session: Sessio
 
 
 @rides_router.post("/bikes/{bike_id}/rides/{ride_id}")
-async def update_ride(bike_id: int, ride_id: int, request: Request, session: Session = Depends(get_session)):
+async def update_ride(bike_id: BikeId, ride_id: RideId, request: Request, session: Session = Depends(get_session)):
     bike = get_bike_or_404(session, bike_id)
     bike_model = request.app.state.bike_models[bike.model_key]
     ride = get_ride_or_404(session, bike_id, ride_id)
     form = await request.form()
 
-    hours, error = _parse_hours(form.get("hours"))
-    date_str = None
-    if error is None:
-        date_str, error = _parse_date(str(form.get("date", "")))
-
+    fields, error = _parse_ride(form, unit_of(request, bike))
     if error is not None:
         # Re-render just this ride's edit form in place (not the whole
         # list, and not the "log a ride" create form) with the user's
@@ -265,6 +259,7 @@ async def update_ride(bike_id: int, ride_id: int, request: Request, session: Ses
         # overrides that for this response only, so htmx swaps this ride's
         # row instead.
         context = {
+            "unit": unit_of(request, bike),
             "error": error,
             "values": _submitted_form_values(form),
             "action": f"/bikes/{bike_id}/rides/{ride.id}",
@@ -278,9 +273,9 @@ async def update_ride(bike_id: int, ride_id: int, request: Request, session: Ses
         response.headers["HX-Retarget"] = f"#ride-{ride.id}"
         return response
 
-    ride.date = date_str
-    ride.hours = hours
-    ride.notes = str(form.get("notes", "") or "") or None
+    ride.date = fields.date
+    ride.hours = fields.length
+    ride.notes = fields.notes
     for field, value in _suspension_fields_from_form(form).items():
         setattr(ride, field, value)
 
@@ -288,8 +283,8 @@ async def update_ride(bike_id: int, ride_id: int, request: Request, session: Ses
     # second one -- so the bike's current-hours total stays in sync with
     # this ride's new date/hours rather than drifting.
     event = session.query(HoursEvent).filter_by(bike_id=bike.id, kind="ride", ride_id=ride.id).one()
-    event.date = date_str
-    event.hours = hours
+    event.date = fields.date
+    event.hours = fields.length
 
     session.commit()
 
@@ -297,7 +292,7 @@ async def update_ride(bike_id: int, ride_id: int, request: Request, session: Ses
 
 
 @rides_router.post("/bikes/{bike_id}/rides/{ride_id}/delete")
-def delete_ride(bike_id: int, ride_id: int, request: Request, session: Session = Depends(get_session)):
+def delete_ride(bike_id: BikeId, ride_id: RideId, request: Request, session: Session = Depends(get_session)):
     bike = get_bike_or_404(session, bike_id)
     bike_model = request.app.state.bike_models[bike.model_key]
     ride = get_ride_or_404(session, bike_id, ride_id)

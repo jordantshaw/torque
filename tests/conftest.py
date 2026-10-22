@@ -27,7 +27,7 @@ def bike_models_dir(tmp_path):
 @pytest.fixture
 def client(bike_models_dir, tmp_path):
     app = create_app(bike_models_dir=bike_models_dir, database_url=f"sqlite:///{tmp_path / 'test.db'}")
-    return TestClient(app)
+    return TestClient(app, base_url="http://localhost")
 
 
 @pytest.fixture

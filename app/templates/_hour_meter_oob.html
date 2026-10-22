@@ -1,0 +1,2 @@
+{# The header's hour counter, re-sent with an htmx response so it updates in place. #}
+{% if request.headers.get("HX-Request") %}{% with oob = true %}{% include "_hour_meter.html" %}{% endwith %}{% endif %}

@@ -1,46 +1,94 @@
 {% extends "base.html" %}
+{% from "_icons.html" import icon, ring %}
 
-{% block title %}Bikes{% endblock %}
+{% block title %}Garage{% endblock %}
 
 {% block content %}
-<h1>Bikes</h1>
+<header class="page-head page-head-row">
+  <div>
+    <h1>Garage</h1>
+    <p class="bike-meta">{{ bikes|length }} bike{{ "" if bikes|length == 1 else "s" }} in your garage</p>
+  </div>
+  <a href="#add-bike" class="btn btn-primary" id="add-bike-toggle" aria-controls="add-bike" aria-expanded="{{ 'true' if (error or not bikes) else 'false' }}">{{ icon("plus", 16) }}Add a bike</a>
+</header>
+
+{% if notice %}
+<p class="notice" role="status">{{ icon("check", 16) }}{{ notice }}</p>
+{% endif %}
+
+<section class="panel add-bike" id="add-bike"{% if error or not bikes %} data-open="1"{% else %} hidden{% endif %}>
+  <h2>Add a bike</h2>
+  <p class="hint">Pick a model and the service schedule from its manual is loaded for you.</p>
+
+  {% if error %}
+  <p class="form-error">{{ error }}</p>
+  {% endif %}
+
+  <form method="post" action="/bikes" class="add-form">
+    <div>
+      <label for="nickname">Nickname</label>
+      <input type="text" id="nickname" name="nickname" value="{{ nickname or '' }}" required>
+    </div>
+    <div>
+      <label for="model_key">Model</label>
+      <select id="model_key" name="model_key">
+        {% for model in models %}
+        <option value="{{ model.key }}" {% if model.key == model_key %}selected{% endif %}>{{ model.display_name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <button type="submit" class="btn btn-primary">Add bike</button>
+  </form>
+</section>
 
 {% if bikes %}
+<form id="bulk-form" class="bulk-bar" method="post" action="/bulk/bikes">
+  <label class="select-all"><input type="checkbox" id="select-all">Select all</label>
+  <span class="bulk-count" id="bulk-count" aria-live="polite">None selected</span>
+  <span class="bulk-actions">
+    <button type="submit" name="action" value="clear_history" class="btn btn-quiet" disabled data-needs-selection>Clear history</button>
+    <button type="submit" name="action" value="delete" class="btn btn-quiet btn-danger" disabled data-needs-selection>Delete</button>
+  </span>
+</form>
+{% endif %}
+
 <ul class="bike-list">
   {% for bike in bikes %}
-  <li class="bike-row">
-    <a href="/bikes/{{ bike.id }}">
-      <span class="bike-nickname">{{ bike.nickname }}</span>
-      <span class="bike-model">{{ bike.display_name }}</span>
-    </a>
-    <span class="bike-hours">{{ bike.current_hours }} hrs</span>
-    <span class="bike-counts">
-      {{ bike.due_count }} due, {{ bike.upcoming_count }} upcoming
-    </span>
+  <li>
+    <article class="bike-card">
+      <a class="bike-card-link" href="/bikes/{{ bike.id }}">
+        <span class="bike-card-top">
+          <span class="bike-card-title">
+            <span class="bike-nickname">{{ bike.nickname }}</span>
+            <span class="bike-model">{{ bike.display_name }}</span>
+          </span>
+          <span class="bike-card-ring">{{ ring(bike.health_pct) }}</span>
+        </span>
+        <span class="bike-card-foot">
+          <span class="bike-hours">{{ icon("gauge", 18) }}{{ bike.current_hours|amt(bike.unit) }}<small>{{ bike.unit.short }}</small></span>
+          <span class="bike-counts">
+            {% if bike.due_count %}<span class="pill pill-due">{{ bike.due_count }} due</span>{% endif %}
+            {% if bike.upcoming_count %}<span class="pill pill-soon">{{ bike.upcoming_count }} upcoming</span>{% endif %}
+            {% if not bike.due_count and not bike.upcoming_count %}<span class="pill pill-ok">0 due, 0 upcoming</span>{% endif %}
+          </span>
+        </span>
+      </a>
+      <div class="bike-card-actions">
+        <label class="card-select"><input type="checkbox" class="bike-select" name="ids" value="{{ bike.id }}" form="bulk-form">Select</label>
+        <form method="post" action="/bikes/{{ bike.id }}/clear-history" data-confirm="Clear all maintenance history for {{ bike.nickname }}? Its rides and hours are kept.">
+          <button type="submit" class="btn btn-quiet">Clear history</button>
+        </form>
+        <form method="post" action="/bikes/{{ bike.id }}/delete" data-confirm="Delete {{ bike.nickname }} and all of its rides, hours and service history? This cannot be undone.">
+          <button type="submit" class="btn btn-quiet btn-danger">Delete</button>
+        </form>
+      </div>
+    </article>
   </li>
   {% endfor %}
 </ul>
-{% else %}
-<p>No bikes yet. Add one below.</p>
-{% endif %}
 
-<h2>Add a bike</h2>
+{% endblock %}
 
-{% if error %}
-<p class="form-error">{{ error }}</p>
-{% endif %}
-
-<form method="post" action="/bikes">
-  <label for="nickname">Nickname</label>
-  <input type="text" id="nickname" name="nickname" value="{{ nickname or '' }}" required>
-
-  <label for="model_key">Model</label>
-  <select id="model_key" name="model_key">
-    {% for model in models %}
-    <option value="{{ model.key }}" {% if model.key == model_key %}selected{% endif %}>{{ model.display_name }}</option>
-    {% endfor %}
-  </select>
-
-  <button type="submit">Add bike</button>
-</form>
+{% block scripts %}
+<script src="/static/garage.js" defer></script>
 {% endblock %}

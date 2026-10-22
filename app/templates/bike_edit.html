@@ -3,22 +3,34 @@
 {% block title %}Edit {{ bike.nickname }}{% endblock %}
 
 {% block content %}
+<a href="/bikes/{{ bike.id }}" class="back-link">Back to {{ bike.nickname }}</a>
 <h1>Edit {{ bike.nickname }}</h1>
-<p><a href="/bikes/{{ bike.id }}">Back to bike</a></p>
 
+<section class="panel">
 <h2>Rename</h2>
 {% if error %}
 <p class="form-error">{{ error }}</p>
 {% endif %}
-<form method="post" action="/bikes/{{ bike.id }}">
+<form method="post" action="/bikes/{{ bike.id }}" class="stack">
   <label for="nickname">Nickname</label>
   <input type="text" id="nickname" name="nickname" value="{{ nickname or '' }}">
-  <button type="submit">Save</button>
+  {% if bike_model.unit == "km" %}
+  <label for="distance_unit">Show distances in</label>
+  <select id="distance_unit" name="distance_unit">
+    <option value="km" {% if unit.key == "km" %}selected{% endif %}>Kilometres</option>
+    <option value="mi" {% if unit.key == "mi" %}selected{% endif %}>Miles</option>
+  </select>
+  {% endif %}
+  <button type="submit" class="btn btn-primary">Save</button>
 </form>
+</section>
+
+<section class="panel panel-danger">
 
 <h2>Delete bike</h2>
-<p>This permanently deletes {{ bike.nickname }} and all of its rides, hours, and service history.</p>
-<form method="post" action="/bikes/{{ bike.id }}/delete" onsubmit="return confirm('Delete this bike and all its history?')">
-  <button type="submit">Delete bike</button>
+<p class="hint">This permanently deletes {{ bike.nickname }} and all of its rides, hours, and service history.</p>
+<form method="post" action="/bikes/{{ bike.id }}/delete" data-confirm="Delete this bike and all its history?">
+  <button type="submit" class="btn btn-danger-solid">Delete bike</button>
 </form>
+</section>
 {% endblock %}

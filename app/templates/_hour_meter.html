@@ -1,0 +1,9 @@
+{% from "_icons.html" import icon %}
+<a id="hour-meter" class="hour-meter" href="/bikes/{{ bike.id }}#hours" title="Edit {{ unit.reading|lower }}" aria-label="{{ unit.reading }}, edit"{% if oob %} hx-swap-oob="true"{% endif %}>
+  <span class="hour-meter-icon">{{ icon("gauge", 20) }}</span>
+  <span class="hour-meter-text">
+    <span class="hour-meter-value">{{ current_hours|amt }}</span>
+    <span class="hour-meter-unit">{{ unit.meter_label }}</span>
+  </span>
+  <span class="hour-meter-edit">{{ icon("pencil", 14) }}</span>
+</a>

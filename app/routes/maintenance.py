@@ -1,5 +1,5 @@
-"""Maintenance tab actions: set current hours, complete a single item, or
-complete every item due at a given service point.
+"""Maintenance tab actions: set the current reading, complete a single item,
+or complete every item due at a given service point.
 
 Every POST here writes to the database (or rejects with an inline error and
 no write) and then re-renders `_maintenance_list.html` with fresh data, via
@@ -15,9 +15,19 @@ from sqlalchemy.orm import Session
 
 from app.db import get_session
 from app.models import HoursEvent, ServiceRecord
-from app.routes.bikes import build_maintenance_context, get_bike_or_404
-from app.services.due import items_for_service_point
-from app.services.schedule import next_point
+from app.routes.bikes import build_maintenance_context
+from app.routes.common import (
+    MAX_READING,
+    BikeId,
+    ServicePoint,
+    get_bike_or_404,
+    parse_date,
+    parse_notes,
+    parse_reading,
+    unit_of,
+)
+from app.services.due import items_for_service_point, recorded_points_by_item
+from app.services.schedule import ItemSchedule, action_at, next_point
 
 maintenance_router = APIRouter()
 
@@ -31,42 +41,58 @@ def _render_panel(request: Request, bike, error: str | None = None):
     )
 
 
-def _parse_hours(raw) -> tuple[float | None, str | None]:
-    """Parse a form `hours` value, returning (hours, error). Fractional
-    hours (e.g. 1.5) are allowed."""
-    try:
-        hours = float(raw)
-    except (TypeError, ValueError):
-        return None, "Hours must be a number."
-    if hours < 0:
-        return None, "Hours must be zero or greater."
-    return hours, None
+def _resolve_point(
+    schedule: ItemSchedule, recorded: set[int], raw_point
+) -> tuple[int | None, str | None]:
+    """The service point an item is being completed at, as (point, error).
+
+    A row inside a service names its own point; the plain per-item form
+    doesn't, and then the item's next outstanding point is the one."""
+    if raw_point:
+        try:
+            point = int(raw_point)
+        except ValueError:
+            point = None
+        if (
+            point is None
+            or not 0 < point <= MAX_READING
+            or point in recorded
+            or action_at(schedule, point) is None
+        ):
+            return None, "Nothing due for this item at that service."
+        return point, None
+    point = next_point(schedule, recorded)
+    if point is None:
+        return None, "Nothing due for this item."
+    return point, None
 
 
-def _parse_date(raw: str) -> tuple[str | None, str | None]:
-    """Validate a form `date` value is a parseable ISO date, returning
-    (date_string, error)."""
-    if not raw:
-        return None, "Date is required."
-    try:
-        date.fromisoformat(raw)
-    except ValueError:
-        return None, "Date must be a valid date."
-    return raw, None
+def _parse_completion(form, unit) -> tuple[str | None, float | None, str | None, str | None]:
+    """The date, reading and notes from a completion form, as
+    (date, stored reading, notes, error)."""
+    reading, error = parse_reading(form.get("hours"), unit, unit.reading, allow_zero=True)
+    if error is not None:
+        return None, None, None, error
+    date_str, error = parse_date(str(form.get("date", "")))
+    if error is not None:
+        return None, None, None, error
+    notes, error = parse_notes(form.get("notes"))
+    return date_str, reading, notes, error
 
 
 @maintenance_router.post("/bikes/{bike_id}/hours")
-async def set_hours(bike_id: int, request: Request, session: Session = Depends(get_session)):
+async def set_hours(bike_id: BikeId, request: Request, session: Session = Depends(get_session)):
     bike = get_bike_or_404(session, bike_id)
     form = await request.form()
-    hours, error = _parse_hours(form.get("hours"))
+    unit = unit_of(request, bike)
+    reading, error = parse_reading(form.get("hours"), unit, unit.reading, allow_zero=True)
 
     if error is None:
         session.add(HoursEvent(
             bike_id=bike.id,
             date=date.today().isoformat(),
             kind="set",
-            hours=hours,
+            hours=reading,
         ))
         session.commit()
 
@@ -75,7 +101,7 @@ async def set_hours(bike_id: int, request: Request, session: Session = Depends(g
 
 @maintenance_router.post("/bikes/{bike_id}/items/{item_key}/complete")
 async def complete_item(
-    bike_id: int, item_key: str, request: Request, session: Session = Depends(get_session)
+    bike_id: BikeId, item_key: str, request: Request, session: Session = Depends(get_session)
 ):
     bike = get_bike_or_404(session, bike_id)
     bike_model = request.app.state.bike_models[bike.model_key]
@@ -83,29 +109,22 @@ async def complete_item(
     if item is None:
         raise HTTPException(status_code=404)
 
-    recorded_hours = {
-        r.service_point for r in bike.service_records if r.item_key == item_key
-    }
-    point = next_point(item.schedule, recorded_hours)
-    if point is None:
-        return _render_panel(request, bike, error="Nothing due for this item.")
-
     form = await request.form()
-    hours, error = _parse_hours(form.get("hours"))
-    date_str = None
-    if error is None:
-        date_str, error = _parse_date(str(form.get("date", "")))
-
+    recorded = recorded_points_by_item(bike.service_records).get(item_key, set())
+    point, error = _resolve_point(item.schedule, recorded, form.get("point"))
     if error is not None:
         return _render_panel(request, bike, error)
 
-    notes = str(form.get("notes", "") or "") or None
+    date_str, reading, notes, error = _parse_completion(form, unit_of(request, bike))
+    if error is not None:
+        return _render_panel(request, bike, error)
+
     session.add(ServiceRecord(
         bike_id=bike.id,
         item_key=item_key,
         service_point=point,
         completed_date=date_str,
-        engine_hours=hours,
+        engine_hours=reading,
         notes=notes,
     ))
     session.commit()
@@ -115,35 +134,29 @@ async def complete_item(
 
 @maintenance_router.post("/bikes/{bike_id}/service-points/{hour}/complete")
 async def complete_service_point(
-    bike_id: int, hour: int, request: Request, session: Session = Depends(get_session)
+    bike_id: BikeId, hour: ServicePoint, request: Request, session: Session = Depends(get_session)
 ):
     bike = get_bike_or_404(session, bike_id)
     bike_model = request.app.state.bike_models[bike.model_key]
 
     form = await request.form()
-    hours, error = _parse_hours(form.get("hours"))
-    date_str = None
-    if error is None:
-        date_str, error = _parse_date(str(form.get("date", "")))
-
+    date_str, reading, notes, error = _parse_completion(form, unit_of(request, bike))
     if error is not None:
         return _render_panel(request, bike, error)
 
-    recorded_by_item: dict[str, set[int]] = {}
-    for record in bike.service_records:
-        recorded_by_item.setdefault(record.item_key, set()).add(record.service_point)
+    item_keys = items_for_service_point(
+        {item.key: item.schedule for item in bike_model.items},
+        hour,
+        recorded_points_by_item(bike.service_records),
+    )
 
-    item_schedules = {item.key: item.schedule for item in bike_model.items}
-    item_keys = items_for_service_point(item_schedules, hour, recorded_by_item)
-
-    notes = str(form.get("notes", "") or "") or None
     for item_key in item_keys:
         session.add(ServiceRecord(
             bike_id=bike.id,
             item_key=item_key,
             service_point=hour,
             completed_date=date_str,
-            engine_hours=hours,
+            engine_hours=reading,
             notes=notes,
         ))
     session.commit()

@@ -4,11 +4,11 @@
 {% endif %}
 <form class="ride-form" hx-post="{{ action }}" hx-target="#rides-panel" hx-swap="outerHTML">
   <label>Date<input type="date" name="date" value="{{ values.date if values.date is not none else '' }}"></label>
-  <label>Hours<input type="number" name="hours" min="0.1" step="0.1" value="{{ values.hours if values.hours is not none else '' }}"></label>
+  <label>{{ unit.ride_label }}<input type="number" name="hours" min="0" step="any" value="{{ values.hours if values.hours is not none else '' }}"></label>
   <label>Notes<input type="text" name="notes" value="{{ values.notes if values.notes is not none else '' }}" placeholder="Optional"></label>
 
-  <fieldset class="suspension-fields">
-    <legend>Suspension settings (optional)</legend>
+  <details class="suspension-fields"{% if wrapper_id %} open{% endif %}>
+    <summary>Suspension settings (optional)</summary>
     <label>Fork compression (clicks out)<input type="number" name="fork_compression" step="1" value="{{ values.fork_compression if values.fork_compression is not none else '' }}"></label>
     <label>Fork rebound (clicks out)<input type="number" name="fork_rebound" step="1" value="{{ values.fork_rebound if values.fork_rebound is not none else '' }}"></label>
     <label>Shock low-speed compression (clicks out)<input type="number" name="shock_lsc" step="1" value="{{ values.shock_lsc if values.shock_lsc is not none else '' }}"></label>
@@ -16,11 +16,11 @@
     <label>Shock rebound (clicks out)<input type="number" name="shock_rebound" step="1" value="{{ values.shock_rebound if values.shock_rebound is not none else '' }}"></label>
     <label>Static sag (mm)<input type="number" name="sag_static" step="1" value="{{ values.sag_static if values.sag_static is not none else '' }}"></label>
     <label>Rider sag (mm)<input type="number" name="sag_rider" step="1" value="{{ values.sag_rider if values.sag_rider is not none else '' }}"></label>
-  </fieldset>
+  </details>
 
-  <button type="submit">{{ submit_label }}</button>
+  <button type="submit" class="btn btn-primary">{{ submit_label }}</button>
   {% if cancel_url %}
-  <a href="{{ cancel_url }}" class="cancel-link">Cancel</a>
+  <a href="{{ cancel_url }}" class="btn btn-quiet cancel-link">Cancel</a>
   {% endif %}
 </form>
 {% if wrapper_id %}</div>{% endif %}

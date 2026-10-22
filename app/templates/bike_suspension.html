@@ -2,8 +2,11 @@
 
 {% block tab_content %}
 <div id="suspension-panel">
+  {% if not bike_model.suspension.settings and not bike_model.suspension.fixed_values %}
+  <p class="empty">No suspension reference is available for this model.</p>
+  {% endif %}
   {% if bike_model.suspension.settings %}
-  <table class="suspension-settings">
+  <div class="table-wrap"><table class="suspension-settings">
     <thead>
       <tr>
         <th>Setting</th>
@@ -24,12 +27,12 @@
       </tr>
       {% endfor %}
     </tbody>
-  </table>
+  </table></div>
   {% endif %}
 
   {% if bike_model.suspension.fixed_values %}
   <section class="fixed-values">
-    <h3>Fixed Values</h3>
+    <h2>Fixed values</h2>
     <dl>
       {% for key, value in bike_model.suspension.fixed_values.items() %}
       <dt>{{ key }}</dt>
@@ -41,7 +44,7 @@
 
   {% if bike_model.suspension.source %}
   <section class="source">
-    <p><strong>Source:</strong> {{ bike_model.suspension.source }}</p>
+    <p><strong>Source</strong> {{ bike_model.suspension.source }}</p>
   </section>
   {% endif %}
 </div>

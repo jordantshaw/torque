@@ -107,3 +107,87 @@ def test_complete_all_for_service_point_only_affects_items_with_that_point(clien
     assert response.status_code == 200
     item_keys = {r.item_key for r in db_session.query(ServiceRecord).filter_by(bike_id=bike.id).all()}
     assert item_keys == {"oil", "clutch_disks"}  # connecting_rod has no action at hour 30
+
+
+def _service_group(html: str, label: str) -> str:
+    """The HTML of one service's group (from its heading to the next group)."""
+    start = html.index(label)
+    end = html.find('<details class="service', start)
+    return html[start:] if end == -1 else html[start:end]
+
+
+def test_each_service_lists_every_item_scheduled_at_that_point(client, db_session):
+    bike = _make_bike(db_session)
+    html = client.get(f"/bikes/{bike.id}").text
+    # Clutch disks print marks at 30, 60, 90...; Oil is every 30. A later
+    # service lists them even though their 30h point is still outstanding.
+    sixty = _service_group(html, "60-hour service")
+    assert "Clutch disks" in sixty
+    assert "Oil" in sixty
+    assert "Connecting rod" not in sixty  # only at 90 and 180
+    assert "Connecting rod" in _service_group(html, "90-hour service")
+
+
+def test_complete_item_at_a_specific_service_point(client, db_session):
+    bike = _make_bike(db_session)
+    response = client.post(
+        f"/bikes/{bike.id}/items/clutch_disks/complete",
+        data={"point": "60", "date": "2026-02-01", "hours": "61", "notes": ""},
+    )
+    assert response.status_code == 200
+    record = db_session.query(ServiceRecord).filter_by(bike_id=bike.id, item_key="clutch_disks").one()
+    assert record.service_point == 60  # not the item's next point (30)
+    assert "Done 2026-02-01" in _service_group(client.get(f"/bikes/{bike.id}").text, "60-hour service")
+
+
+def test_complete_item_rejects_a_point_it_has_no_action_at(client, db_session):
+    bike = _make_bike(db_session)
+    response = client.post(
+        f"/bikes/{bike.id}/items/connecting_rod/complete",
+        data={"point": "30", "date": "2026-02-01", "hours": "31"},
+    )
+    assert response.status_code == 400
+    assert db_session.query(ServiceRecord).count() == 0
+
+
+def test_complete_item_rejects_an_already_recorded_point(client, db_session):
+    bike = _make_bike(db_session)
+    form = {"point": "30", "date": "2026-02-01", "hours": "31"}
+    assert client.post(f"/bikes/{bike.id}/items/clutch_disks/complete", data=form).status_code == 200
+    assert client.post(f"/bikes/{bike.id}/items/clutch_disks/complete", data=form).status_code == 400
+    assert db_session.query(ServiceRecord).count() == 1
+
+
+def test_row_details_show_the_items_description(client, db_session, bike_models_dir):
+    (bike_models_dir / "conftest_bike.yaml").write_text(
+        (bike_models_dir / "conftest_bike.yaml").read_text().replace(
+            "    name: Oil\n", "    name: Oil\n    description: Drain it warm.\n    page: '52'\n    schedule_page: '83'\n", 1
+        )
+    )
+    from fastapi.testclient import TestClient
+
+    from app.main import create_app
+
+    app = create_app(bike_models_dir, f"sqlite:///{bike_models_dir / 'd.db'}")
+    c = TestClient(app, base_url="http://localhost")
+    with app.state.sessionmaker() as session:
+        bike = Bike(nickname="B", model_key="test-bike")
+        session.add(bike)
+        session.commit()
+        bike_id = bike.id
+    html = c.get(f"/bikes/{bike_id}").text
+    assert "Drain it warm." in html
+    assert "Manual: schedule p. 83, how-to p. 52" in html
+
+
+def test_completed_items_show_a_ticked_checkbox_and_pending_ones_an_empty_one(client, db_session):
+    bike = _make_bike(db_session)
+    client.post(
+        f"/bikes/{bike.id}/items/clutch_disks/complete",
+        data={"point": "30", "date": "2026-02-01", "hours": "31", "notes": ""},
+    )
+    thirty = _service_group(client.get(f"/bikes/{bike.id}").text, "30-hour service")
+    disks = thirty[thirty.index("Clutch disks") - 400 : thirty.index("Clutch disks") + 200]
+    assert 'aria-label="Completed"' in disks
+    oil = thirty[thirty.index(">Oil<") - 400 : thirty.index(">Oil<") + 100]
+    assert 'aria-label="Not done yet"' in oil
