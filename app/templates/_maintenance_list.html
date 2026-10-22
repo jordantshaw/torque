@@ -16,7 +16,7 @@
 {% set can_complete = row.point is not none and row.state != "done" %}
 {% set has_body = can_complete or row.history or row.description or row.schedule_page %}
 {% if has_body %}
-<details class="row status-{{ row.state }}" data-cat="{{ row.category }}">
+<details class="row status-{{ row.state }}" data-cat="{{ row.category }}" data-keep-open="row:{{ row.point }}:{{ row.key }}">
   <summary>{{ row_line(row, true) }}</summary>
   <div class="row-body">
     {% if row.description %}
@@ -109,7 +109,7 @@
   <section class="maintenance-block">
     <h2>Services <span class="count-chip">{{ service_groups|length }}</span></h2>
     {% for g in service_groups %}
-    <details class="service status-{{ g.status }}"{% if g.status in ("due", "upcoming") %} open{% endif %}>
+    <details class="service status-{{ g.status }}" data-keep-open="service:{{ g.point }}"{% if g.status in ("due", "upcoming") %} open{% endif %}>
       <summary class="service-head">
         <span class="point-icon">{{ icon("flag", 16) }}</span>
         <h3>{% if g.point is none %}Past the manual's schedule{% else %}{{ unit.service_label(g.point) }}{% endif %}</h3>
@@ -129,7 +129,7 @@
         </details>
         {% endif %}
         {% for c in g.systems %}
-        <details class="category">
+        <details class="category" data-keep-open="system:{{ g.point }}:{{ c.name }}">
           <summary>
             <span class="cat-icon">{{ category_icon(c.name, 16) }}</span>
             <span class="cat-name">{{ c.name }}</span>

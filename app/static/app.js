@@ -16,6 +16,30 @@ htmx.config.allowEval = false;
 // The indicator styles htmx injects would need an inline-style exception.
 htmx.config.includeIndicatorStyles = false;
 
+// A swap replaces the whole panel, which would collapse every <details> the
+// reader had opened. Remember each one marked data-keep-open by its key (open
+// or closed) and put it back once the new panel is in place.
+var keptOpen = null;
+document.addEventListener("htmx:beforeSwap", function (event) {
+  var target = event.detail.target;
+  keptOpen = null;
+  if (!target || !target.querySelectorAll) return;
+  var groups = target.querySelectorAll("details[data-keep-open]");
+  if (!groups.length) return;
+  keptOpen = {};
+  groups.forEach(function (group) {
+    keptOpen[group.dataset.keepOpen] = group.open;
+  });
+});
+document.addEventListener("htmx:afterSwap", function () {
+  if (!keptOpen) return;
+  document.querySelectorAll("details[data-keep-open]").forEach(function (group) {
+    var was = keptOpen[group.dataset.keepOpen];
+    if (was !== undefined) group.open = was;
+  });
+  keptOpen = null;
+});
+
 // Confirm before anything marked data-confirm (deleting, clearing history).
 document.addEventListener("submit", function (event) {
   var message = event.target.dataset && event.target.dataset.confirm;
