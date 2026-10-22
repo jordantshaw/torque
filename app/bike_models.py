@@ -206,9 +206,31 @@ def _read_yaml(path: Path) -> dict:
         raise BikeModelError(f"failed to parse {path}: {e}") from e
 
 
+def _suspension_from(data: dict, path: Path, context: str = "") -> Suspension:
+    """The suspension block of a model or variant: written inline as
+    `suspension:`, or kept in a separate file named by `suspension_file:`.
+
+    The file is for data that must not be published (a dealer-only setting
+    sheet, say): keep it in a git-ignored folder beside the model file. It is
+    optional. If it is missing the model simply has no suspension reference."""
+    where = f"{context} in {path}" if context else str(path)
+    if "suspension" in data and "suspension_file" in data:
+        raise BikeModelError(f"{where}: use 'suspension' or 'suspension_file', not both")
+    if "suspension_file" not in data:
+        return _build_suspension(data.get("suspension") or {}, path)
+
+    folder = path.parent.resolve()
+    target = (folder / str(data["suspension_file"])).resolve()
+    if not target.is_relative_to(folder):
+        raise BikeModelError(f"{where}: 'suspension_file' must be inside {path.parent}")
+    if not target.is_file():
+        return _build_suspension({}, path)
+    return _build_suspension(_read_yaml(target) or {}, target)
+
+
 def _build_base_model(data: dict, path: Path) -> BikeModel:
     items = _build_items(data.get("items", []), path)
-    suspension = _build_suspension(data.get("suspension", {}), path)
+    suspension = _suspension_from(data, path)
 
     unit = data.get("unit", "hours")
     if unit not in MODEL_UNITS:
@@ -237,7 +259,8 @@ def _build_variant(variant: dict, base: BikeModel, path: Path) -> BikeModel:
     """A closely related bike that shares the base model's items, notes and
     unit. It may `omit` items it doesn't have, `overrides` the schedule of
     items that differ (a full replacement schedule per item), and replace the
-    `suspension` block; anything it doesn't mention is inherited."""
+    suspension (`suspension` or `suspension_file`); anything it doesn't mention
+    is inherited."""
     key = _require(variant, "key", path, context="variant")
     context = f"variant '{key}'"
     item_keys = {item.key for item in base.items}
@@ -258,8 +281,8 @@ def _build_variant(variant: dict, base: BikeModel, path: Path) -> BikeModel:
         items.append(item)
 
     suspension = base.suspension
-    if "suspension" in variant:
-        suspension = _build_suspension(variant["suspension"] or {}, path)
+    if "suspension" in variant or "suspension_file" in variant:
+        suspension = _suspension_from(variant, path, context)
 
     return replace(
         base,

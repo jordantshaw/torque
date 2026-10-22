@@ -17,6 +17,8 @@ another site, so it works offline.
 - [Limits](#limits)
 - [Project layout](#project-layout)
 - [More docs](#more-docs)
+- [Disclaimer](#disclaimer)
+- [License](#license)
 
 ## What it does
 
@@ -28,7 +30,7 @@ another site, so it works offline.
   what to do and which manual page it comes from.
 - **Rides:** log rides and suspension settings. Rides move the bike's reading
   forward, and you can also set the reading directly.
-- **Suspension:** the maker's reference settings for the model.
+- **Suspension:** reference settings for the model, when its file provides them.
 - **Hours or distance:** engine hours for most bikes, kilometres for
   distance-based manuals, with a per-bike switch to show miles.
 
@@ -124,3 +126,22 @@ Built with FastAPI, SQLAlchemy, Jinja and htmx. There is no JavaScript build.
 - [Deploying](docs/deploying.md): servers, updates, backups, troubleshooting.
 - [Adding a bike model](docs/adding-a-bike-model.md): from owner's manual to
   model file.
+
+## Disclaimer
+
+- Torque is not affiliated with or endorsed by Beta, KTM or Sur-Ron. Those names
+  are trademarks of their owners, used only to say which bike a schedule is for.
+- The bundled schedules were typed in by hand from the owners' manuals and may
+  contain mistakes. Always check your own manual before relying on them, and have
+  safety-critical work done by a qualified mechanic. The manuals themselves
+  remain their publishers' property; only the intervals are reproduced here.
+- Some suspension reference figures come from sheets that are not published.
+  A model can read them from a private, git-ignored file (see
+  [Adding a bike model](docs/adding-a-bike-model.md#suspension)), so the bundled
+  Beta models ship with an empty Suspension tab.
+
+## License
+
+MIT, see [LICENSE](LICENSE). Torque bundles [htmx](https://htmx.org) (0BSD) and
+the Manrope typeface (SIL Open Font License; the text is in
+`app/static/fonts/OFL.txt`).

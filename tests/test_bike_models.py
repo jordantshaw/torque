@@ -151,3 +151,66 @@ def test_variant_keys_must_be_unique_across_files(tmp_path):
     (tmp_path / "b.yaml").write_text(BASE.replace("key: base", "key: other") + "variants:\n  - key: base\n    display_name: X\n    engine: e\n")
     with pytest.raises(BikeModelError, match="duplicate"):
         load_bike_models(tmp_path)
+
+
+# ---- suspension_file: keep unpublishable data in a separate, git-ignored file
+
+SUSPENSION_DATA = (
+    "settings:\n  - {name: Fork compression (clicks out), factory: '1', racing: '2', comfort: '3', soft: '4'}\n"
+    "fixed_values: {Fork spring: '0.30 kg'}\nsource: from the file\n"
+)
+
+
+def _model_with(tmp_path, header_extra="", variants=""):
+    (tmp_path / "local").mkdir(exist_ok=True)
+    path = tmp_path / "m.yaml"
+    path.write_text(BASE.split("suspension:")[0] + header_extra + variants)
+    return path
+
+
+def test_suspension_can_come_from_a_separate_file(tmp_path):
+    path = _model_with(tmp_path, "suspension_file: local/s.yaml\n")
+    (tmp_path / "local" / "s.yaml").write_text(SUSPENSION_DATA)
+    model = load_bike_model(path)
+    assert model.suspension.source == "from the file"
+    assert model.suspension.fixed_values == {"Fork spring": "0.30 kg"}
+    assert model.suspension.settings[0].factory == "1"
+
+
+def test_a_missing_suspension_file_just_means_no_suspension_reference(tmp_path):
+    model = load_bike_model(_model_with(tmp_path, "suspension_file: local/absent.yaml\n"))
+    assert model.suspension.settings == [] and model.suspension.source == ""
+
+
+def test_an_empty_suspension_file_is_fine(tmp_path):
+    path = _model_with(tmp_path, "suspension_file: local/s.yaml\n")
+    (tmp_path / "local" / "s.yaml").write_text("")
+    assert load_bike_model(path).suspension.settings == []
+
+
+def test_a_suspension_file_cannot_point_outside_the_models_folder(tmp_path):
+    (tmp_path.parent / "outside.yaml").write_text(SUSPENSION_DATA)
+    path = _model_with(tmp_path, "suspension_file: ../outside.yaml\n")
+    with pytest.raises(BikeModelError, match="inside"):
+        load_bike_model(path)
+
+
+def test_suspension_and_suspension_file_cannot_both_be_given(tmp_path):
+    path = _model_with(tmp_path, "suspension: {source: x}\nsuspension_file: local/s.yaml\n")
+    with pytest.raises(BikeModelError, match="not both"):
+        load_bike_model(path)
+
+
+def test_variants_can_have_their_own_suspension_file_or_inherit(tmp_path):
+    variants = (
+        "variants:\n"
+        "  - {key: own, display_name: Own, engine: e, suspension_file: local/own.yaml}\n"
+        "  - {key: same, display_name: Same, engine: e}\n"
+    )
+    path = _model_with(tmp_path, "suspension_file: local/base.yaml\n", variants)
+    (tmp_path / "local" / "base.yaml").write_text(SUSPENSION_DATA)
+    (tmp_path / "local" / "own.yaml").write_text(SUSPENSION_DATA.replace("from the file", "variant file"))
+    models = {m.key: m for m in load_bike_model_file(path)}
+    assert models["base"].suspension.source == "from the file"
+    assert models["own"].suspension.source == "variant file"
+    assert models["same"].suspension.source == "from the file"  # inherited

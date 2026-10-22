@@ -12,6 +12,8 @@ the test is DRY with the fixture it's checking.
 
 from pathlib import Path
 
+import pytest
+
 from app.bike_models import load_bike_model
 from app.services.schedule import ActionsSchedule
 
@@ -116,12 +118,45 @@ def test_beta_model_has_one_off_note():
     assert any("rear sprocket" in note for note in model.notes)
 
 
-def test_beta_model_suspension_source_notes_2025_caveat():
-    model = load_bike_model(MODEL_PATH)
-    assert "2025" in model.suspension.source
-    assert "2026" in model.suspension.source
-    assert len(model.suspension.settings) == 5
-    assert model.suspension.fixed_values["Fork spring"] == "REDACTED"
+LOCAL_SUSPENSION = MODEL_PATH.parent / "local" / "beta-250-300-suspension.yaml"
+needs_local_data = pytest.mark.skipif(
+    not LOCAL_SUSPENSION.exists(),
+    reason="the private suspension files (bike_models/local/) are not present",
+)
+
+
+def test_the_suspension_figures_are_not_in_the_published_model_file():
+    """The setting sheet is for authorised dealers, so the figures live in
+    git-ignored files that the model file only points at."""
+    text = MODEL_PATH.read_text()
+    assert "suspension_file: local/beta-250-300-suspension.yaml" in text
+    assert "suspension_file: local/beta-125-200-suspension.yaml" in text
+    for marker in ("KYB", "STT-2023", "Fork spring", "Shock spring", "Static sag", "factory:", "clicks out"):
+        assert marker not in text, marker
+
+
+def test_the_model_loads_without_the_private_suspension_files(tmp_path):
+    """Anyone who clones the repository has no local/ folder: the Beta models
+    must still load, with no suspension reference."""
+    import shutil
+
+    shutil.copy(MODEL_PATH, tmp_path / MODEL_PATH.name)
+    from app.bike_models import load_bike_model_file
+
+    for model in load_bike_model_file(tmp_path / MODEL_PATH.name):
+        assert model.suspension.settings == [], model.key
+        assert len(model.items) >= 47, model.key
+
+
+@needs_local_data
+def test_with_the_private_files_each_model_gets_its_own_suspension_reference():
+    models = _models()
+    base = models["beta-300-rr-race-2026"].suspension
+    assert len(base.settings) == 5 and base.fixed_values and base.source
+    assert models["beta-250-rr-race-2026"].suspension == base  # the 250 follows the 300
+    small = models["beta-200-rr-race-2026"].suspension
+    assert small.settings and small != base
+    assert models["beta-125-rr-race-2026"].suspension == small
 
 
 # ---- Variants: the same manual covers the 125, 200 and 250 (page 83)
@@ -177,14 +212,6 @@ def test_only_the_125_omits_the_battery():
     names = lambda key: {i.name for i in models[key].items}
     assert "12V battery check/recharge" in names("beta-200-rr-race-2026")
     assert "12V battery check/recharge" not in names("beta-125-rr-race-2026")
-
-
-def test_125_200_use_their_own_suspension_sheet():
-    models = _models()
-    small = models["beta-200-rr-race-2026"].suspension
-    assert small.fixed_values["Shock spring"] == "REDACTED"
-    assert small.fixed_values["Fork spring"] == "REDACTED"
-    assert models["beta-250-rr-race-2026"].suspension.fixed_values["Shock spring"] == "REDACTED"
 
 
 def test_schedule_pages_follow_the_manuals_layout():

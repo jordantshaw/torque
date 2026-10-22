@@ -74,13 +74,13 @@ notes:
 suspension:
   settings:
     - name: Fork compression (clicks out)
-      factory: "12"
-      racing: "7"
+      factory: "8"
+      racing: "6"
       comfort: "9"
       soft: "11"
   fixed_values:
     Fork spring: "0.38 kg"
-    Static sag: "25-45 mm"
+    Static sag: "30-40 mm"
   source: "Acme setting sheet, March 2025."
 
 variants:
@@ -218,8 +218,8 @@ fields:
 suspension:
   settings:
     - name: Fork compression (clicks out)
-      factory: "9"
-      racing: "7"
+      factory: "8"
+      racing: "6"
       comfort: "9"
       soft: "11"
   fixed_values:
@@ -230,6 +230,19 @@ suspension:
 Settings named in `SUSPENSION_FIELD_BY_SETTING_NAME` (`app/routes/rides.py`)
 prefill the ride form; others only show on the Suspension tab. With nothing to
 show, write `suspension: {}`.
+
+**Figures you can't publish.** If the sheet is for dealers only, or otherwise not
+yours to share, keep it out of the repository. Put the block above (just the
+`settings`, `fixed_values` and `source` part) in a file under `bike_models/local/`,
+which is git-ignored, and point at it from the model or a variant:
+
+```yaml
+suspension_file: local/my-bike-suspension.yaml
+```
+
+The file is optional: without it the model loads with an empty Suspension tab.
+The path must stay inside the `bike_models/` folder. Use `suspension` or
+`suspension_file`, not both.
 
 ## Descriptions
 

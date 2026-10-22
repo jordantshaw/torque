@@ -322,7 +322,10 @@ notes:
   - "In the manual's key, Check (C) means check, then clean, adjust, lubricate or replace as necessary. The other marks are S replace, R adjust, P clean and T tighten."
   - "After first 100 km, recheck rear sprocket, brake discs, brake calipers, pinion, brake pedal."
 
-suspension: {}
+# Suspension reference figures come from a dealer-only sheet, so they are not
+# published. They live in a git-ignored file; without it the Suspension tab is
+# simply empty.
+suspension_file: local/beta-250-300-suspension.yaml
 
 # The same manual covers the other RR 2T bikes. The 250 follows the 250/300
 # schedule and suspension; the 125 and 200 differ in the rows the manual
@@ -342,7 +345,7 @@ variants:
       drive_shaft_bearings_and_seals: {actions: {60: S, 120: S, 180: S}}
       gearbox_surface_appearance: {actions: {60: C, 120: C, 180: C}}
       gearbox_bearings_primary_shaft: {actions: {60: S, 120: S, 180: S}}
-    suspension: {}
+    suspension_file: local/beta-125-200-suspension.yaml
 
   - key: beta-125-rr-race-2026
     display_name: "2026 Beta 125 RR Race"
@@ -350,4 +353,4 @@ variants:
     # The manual lists the battery only for the 200, 250 and 300.
     omit: [battery_12v_check_recharge]
     overrides: *small_bore_schedule
-    suspension: {}
+    suspension_file: local/beta-125-200-suspension.yaml
