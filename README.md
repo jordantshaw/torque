@@ -30,7 +30,7 @@ another site, so it works offline.
   what to do and which manual page it comes from.
 - **Rides:** log rides and suspension settings. Rides move the bike's reading
   forward, and you can also set the reading directly.
-- **Suspension:** reference settings for the model, when its file provides them.
+- **Suspension:** the maker's reference settings for the model, where it publishes them.
 - **Hours or distance:** engine hours for most bikes, kilometres for
   distance-based manuals, with a per-bike switch to show miles.
 
@@ -134,11 +134,8 @@ Built with FastAPI, SQLAlchemy, Jinja and htmx. There is no JavaScript build.
 - The bundled schedules were typed in by hand from the owners' manuals and may
   contain mistakes. Always check your own manual before relying on them, and have
   safety-critical work done by a qualified mechanic. The manuals themselves
-  remain their publishers' property; only the intervals are reproduced here.
-- Some suspension reference figures come from sheets that are not published.
-  A model can read them from a private, git-ignored file (see
-  [Adding a bike model](docs/adding-a-bike-model.md#suspension)), so the bundled
-  Beta models ship with an empty Suspension tab.
+  remain their publishers' property; the intervals are reproduced here, along
+  with the suspension settings Beta publishes on its website.
 
 ## License
 

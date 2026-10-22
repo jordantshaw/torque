@@ -322,10 +322,45 @@ notes:
   - "In the manual's key, Check (C) means check, then clean, adjust, lubricate or replace as necessary. The other marks are S replace, R adjust, P clean and T tighten."
   - "After first 100 km, recheck rear sprocket, brake discs, brake calipers, pinion, brake pedal."
 
-# Suspension reference figures come from a dealer-only sheet, so they are not
-# published. They live in a git-ignored file; without it the Suspension tab is
-# simply empty.
-suspension_file: local/beta-250-300-suspension.yaml
+suspension:
+  settings:
+    - name: Fork compression (clicks out)
+      factory: "14"
+      racing: "10"
+      comfort: "14"
+      soft: "16"
+    - name: Fork rebound (clicks out)
+      factory: "14"
+      racing: "12"
+      comfort: "14"
+      soft: "16"
+    - name: Shock low-speed compression (clicks out)
+      factory: "13"
+      racing: "7"
+      comfort: "12"
+      soft: "15"
+    - name: Shock high-speed compression (turns out)
+      factory: "1.5"
+      racing: "1.25"
+      comfort: "1.5"
+      soft: "1.75"
+    - name: Shock rebound (clicks out)
+      factory: "13"
+      racing: "7"
+      comfort: "9"
+      soft: "12"
+  fixed_values:
+    Fork spring: "0.45 kg"
+    Fork oil level: "300 cc"
+    Pressure spring: "2.1 kg"
+    Shock spring: "5.3 kg"
+    Static sag: "25-45 mm"
+    Rider sag: "95-110 mm"
+  source: >-
+    KYB setting sheet STT-2023-1 (Oct 24, 2024), published by Beta USA at
+    https://betausa.com/content/2025%20KYB%20Fork%20%26%20Shock%20suspension%20settings%20list.pdf
+    The sheet is titled for 2025 models even though this bike is a 2026,
+    so confirm the values still apply before relying on them.
 
 # The same manual covers the other RR 2T bikes. The 250 follows the 250/300
 # schedule and suspension; the 125 and 200 differ in the rows the manual
@@ -345,7 +380,46 @@ variants:
       drive_shaft_bearings_and_seals: {actions: {60: S, 120: S, 180: S}}
       gearbox_surface_appearance: {actions: {60: C, 120: C, 180: C}}
       gearbox_bearings_primary_shaft: {actions: {60: S, 120: S, 180: S}}
-    suspension_file: local/beta-125-200-suspension.yaml
+    suspension: &small_bore_suspension
+      settings:
+        - name: Fork compression (clicks out)
+          factory: "14"
+          racing: "10"
+          comfort: "14"
+          soft: "16"
+        - name: Fork rebound (clicks out)
+          factory: "14"
+          racing: "12"
+          comfort: "14"
+          soft: "16"
+        - name: Shock low-speed compression (clicks out)
+          factory: "15"
+          racing: "7"
+          comfort: "12"
+          soft: "15"
+        - name: Shock high-speed compression (turns out)
+          factory: "1.5"
+          racing: "1.25"
+          comfort: "1.5"
+          soft: "1.75"
+        - name: Shock rebound (clicks out)
+          factory: "12"
+          racing: "7"
+          comfort: "9"
+          soft: "12"
+      fixed_values:
+        Fork spring: "0.42 kg"
+        Fork oil level: "300 cc"
+        Pressure spring: "2.1 kg"
+        Shock spring: "4.9 kg"
+        Static sag: "25-45 mm"
+        Rider sag: "95-110 mm"
+      source: >-
+        KYB setting sheet STT-2023-1 (Oct 24, 2024), "125/200 RR Race",
+        published by Beta USA at
+        https://betausa.com/content/2025%20KYB%20Fork%20%26%20Shock%20suspension%20settings%20list.pdf
+        The sheet is titled for 2025 models even though this bike is a 2026,
+        so confirm the values still apply before relying on them.
 
   - key: beta-125-rr-race-2026
     display_name: "2026 Beta 125 RR Race"
@@ -353,4 +427,4 @@ variants:
     # The manual lists the battery only for the 200, 250 and 300.
     omit: [battery_12v_check_recharge]
     overrides: *small_bore_schedule
-    suspension_file: local/beta-125-200-suspension.yaml
+    suspension: *small_bore_suspension
