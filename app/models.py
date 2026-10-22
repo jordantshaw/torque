@@ -1,4 +1,4 @@
-"""SQLAlchemy ORM models for the moto-maintenance database.
+"""SQLAlchemy ORM models for the Torque database.
 
 A `Bike` owns its `rides`, `hours_events`, and `service_records`: deleting a
 bike must delete all of them too, with no orphaned rows and no foreign-key
@@ -31,6 +31,8 @@ class Bike(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     nickname: Mapped[str]
     model_key: Mapped[str]
+    # km or mi; only used when the bike's model is distance-based.
+    distance_unit: Mapped[str] = mapped_column(default="km", server_default="km")
     created_at: Mapped[datetime] = mapped_column(default=lambda: datetime.now(timezone.utc))
 
     rides: Mapped[list["Ride"]] = relationship(

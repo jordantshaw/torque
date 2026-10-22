@@ -59,3 +59,28 @@ def test_action_at_actions_projected_hour():
 
 def test_action_at_actions_unprojectable_beyond_last_hour():
     assert action_at(ActionsSchedule({90: "S", 180: "S"}), 270) is None
+
+
+
+def test_once_at_points_come_before_the_repeats():
+    schedule = EveryHoursSchedule(every_hours=20, action="C", once_at=(1, 5))
+    assert next_point(schedule, set()) == 1
+    assert next_point(schedule, {1}) == 5
+    assert next_point(schedule, {1, 5}) == 20
+    assert next_point(schedule, {1, 5, 20}) == 40
+
+
+def test_once_at_action_and_repeats():
+    schedule = EveryHoursSchedule(every_hours=40, action="S", once_at=(5,))
+    assert action_at(schedule, 5) == "S"
+    assert action_at(schedule, 40) == "S"
+    assert action_at(schedule, 20) is None
+    assert action_at(schedule, 6) is None
+
+
+def test_first_unrecorded_repeat():
+    from app.services.schedule import first_unrecorded_repeat
+
+    assert first_unrecorded_repeat(20, set()) == 20
+    assert first_unrecorded_repeat(20, {20, 40}) == 60
+    assert first_unrecorded_repeat(20, {40}) == 20  # a gap is still the first

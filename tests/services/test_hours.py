@@ -39,3 +39,17 @@ def test_current_hours_accumulates_fractional_hours():
         HoursEventInput(3, date(2026, 1, 8), "ride", 2.25),
     ]
     assert current_hours(events) == 13.75
+
+
+def test_current_hours_of_replays_stored_event_rows():
+    from datetime import date
+    from types import SimpleNamespace
+
+    from app.services.hours import current_hours_of
+
+    rows = [
+        SimpleNamespace(id=2, date=date(2026, 1, 2), kind="ride", hours=1.5),
+        SimpleNamespace(id=1, date=date(2026, 1, 1), kind="set", hours=10),
+    ]
+    assert current_hours_of(rows) == 11.5
+    assert current_hours_of([]) == 0

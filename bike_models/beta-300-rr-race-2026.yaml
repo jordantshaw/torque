@@ -6,207 +6,348 @@ items:
   - key: gear_and_clutch_oil
     category: Engine
     name: Gear and clutch oil
+    schedule_page: "83"
+    description: "The engine and gearbox share one oil. Check the level through the inspection hole (it should reach the lower edge of the hole). At each replace point, drain it while the engine is warm and refill with the oil from the manual's lubricants table."
+    page: "52-54"
     actions: {3: S, 30: S, 60: S, 90: S, 120: S, 150: S, 180: S}
   - key: spark_plug
     category: Engine
     name: Spark plug
+    schedule_page: "83"
+    description: "With the engine cold, pull the cap and unscrew the plug. Clean the electrodes with a wire brush, check the gap is 0.5-0.7 mm (bend the ground electrode to correct it), and replace the plug if the insulator is cracked or the electrodes are corroded."
+    page: "61"
     actions: {3: C, 60: S, 120: S, 180: S}
   - key: head_screws
     category: Engine
     name: Head screws
+    schedule_page: "83"
+    description: "Re-tighten the cylinder head screws with a torque wrench after the break-in period."
     actions: {3: T}
   - key: engine_clamping_screws_to_frame
     category: Engine
     name: Engine clamping screws to the frame
+    schedule_page: "83"
+    description: "The bolts that hold the engine in the frame. Check they are tight to the manual's torque (the special engine-to-frame screw is 45 Nm)."
+    page: "85"
     actions: {3: C, 30: C, 60: C, 90: C, 120: C, 150: C, 180: C}
   - key: kick_start_and_gearchange_lever_screws
     category: Engine
     name: Kick start and gearchange lever screws
+    schedule_page: "83"
+    description: "Check that the clamp bolts on the kick starter and shift lever are tight, so the levers don't loosen or slip on their shafts."
     actions: {3: C, 30: C, 60: C, 90: C, 120: C, 150: C, 180: C}
   - key: spark_plug_cap
     category: Engine
     name: Spark plug cap
+    schedule_page: "83"
+    description: "Clean the plug cap (the boot that pushes onto the spark plug) and make sure it fits firmly and is free of dirt and moisture."
     actions: {3: P, 30: P, 60: P, 90: P, 120: P, 150: P, 180: P}
   - key: driving_clutch_disks_coated
     category: Engine
     name: Driving clutch disks (coated)
+    schedule_page: "83"
+    description: "The friction plates inside the clutch. Check for wear and burnt or glazed plates; at the replace points, fit a new set. A workshop job."
     actions: {30: C, 60: C, 90: S, 120: C, 150: C, 180: S}
   - key: clutch_springs_length
     category: Engine
     name: Clutch springs length
+    schedule_page: "83"
+    description: "Measure the clutch springs against the workshop manual's length. Springs that have shortened are weak and can let the clutch slip."
     actions: {30: C, 60: C, 90: S, 120: C, 150: C, 180: S}
   - key: clutch_hub_clutch_bell
     category: Engine
     name: Clutch hub - clutch bell
+    schedule_page: "83"
+    description: "Inspect the hub and the clutch bell where the plates slide in. Heavy notching or grooves make the clutch grab or drag."
     actions: {30: C, 60: C, 90: C, 120: C, 150: C, 180: C}
   - key: cylinder
     category: Engine
     name: Cylinder
+    schedule_page: "83"
+    description: "Inspect the cylinder bore for scoring and wear when the top end is opened up. A workshop job."
     actions: {60: C, 120: C, 180: C}
   - key: piston_and_segments
     category: Engine
     name: Piston and segments
+    schedule_page: "83"
+    description: "The piston and its rings. Replace at the marked points; a worn top end loses compression and power. A workshop job."
     actions: {60: S, 120: S, 180: S}
   - key: connecting_rod
     category: Engine
     name: Connecting rod
+    schedule_page: "83"
+    description: "Replace the connecting rod (usually as part of a crankshaft rebuild) at the marked points. A workshop job."
     actions: {90: S, 180: S}
   - key: drive_shaft_bearings_and_seals
     category: Engine
     name: Drive shaft bearings and seals
+    schedule_page: "83"
+    description: "Replace the bearings and oil seals on the output shaft, the shaft that carries the front sprocket. A workshop job."
     actions: {90: S, 180: S}
   - key: gearbox_surface_appearance
     category: Engine
     name: Surface appearance of the gearbox
+    schedule_page: "83"
+    description: "Inspect the surfaces of the gearbox gears for pitting, wear or discoloration. This is done with the engine cases open."
     actions: {90: C, 180: C}
   - key: gearbox_bearings_primary_shaft
     category: Engine
     name: Gearbox bearings (primary shaft)
+    schedule_page: "83"
+    description: "Replace the bearings on the gearbox's primary (input) shaft. A workshop job."
     actions: {90: S, 180: S}
   - key: water_pump_oil_seal
     category: Engine
     name: Water pump oil seal
+    schedule_page: "83"
+    description: "Replace the seal at the water pump that keeps coolant and gear oil apart. A failing seal shows up as milky oil or oil in the coolant."
     actions: {90: S, 180: S}
   - key: exhaust_valve
     category: Engine
     name: Exhaust valve
+    schedule_page: "83"
+    description: "Check that the exhaust power valve moves freely and clean off carbon build-up. Do not change its adjustment: it is set at the factory, and the manual says to contact an authorised service centre for any adjustment."
     actions: {60: "C/P", 150: "C/P"}
   - key: reed_valve
     category: Engine
     name: Reed valve
+    schedule_page: "83"
+    description: "Check the reed petals in the intake for cracks, chips, or gaps where they should seal. A bad reed causes hard starting and a poor idle."
     actions: {60: C, 120: C, 180: C}
   - key: silencer_noise_absorbing_material
     category: Engine
     name: Noise-absorbing material of the silencer
+    schedule_page: "83"
+    description: "Replace the sound-absorbing packing inside the silencer. It burns out over time, which makes the bike louder and can cost power."
     actions: {30: S, 60: S, 90: S, 120: S, 150: S, 180: S}
 
   # Carburetor
   - key: carb_tightness
     category: Carburetor
     name: Tightness
+    schedule_page: "83"
+    description: "Check the carburetor is clamped firmly, with no air leaks at the intake boot or manifold."
     actions: {3: C, 30: C, 60: C, 90: C, 120: C, 150: C, 180: C}
   - key: carb_idling_setting
     category: Carburetor
     name: Idling setting
+    schedule_page: "83"
+    description: "Check the engine idles steadily once warm. Adjust the idle screw if it stalls or idles too fast."
     actions: {3: C, 30: C, 60: C, 90: C, 120: C, 150: C, 180: C}
   - key: carb_fuel_pipe
     category: Carburetor
     name: Fuel pipe
+    schedule_page: "83"
+    description: "Check the fuel hose from the tap to the carburetor for cracks, kinks and leaks."
     actions: {3: C, 30: C, 60: C, 90: C, 120: C, 150: C, 180: C}
   - key: carb_breather_pipe
     category: Carburetor
     name: Breather pipe
+    schedule_page: "83"
+    description: "Check the carburetor's breather hoses are connected, not pinched, and not blocked."
     actions: {3: C, 30: C, 60: C, 90: C, 120: C, 150: C, 180: C}
 
   # Assembling groups
   - key: coolant_system_tightness_and_level
     category: Assembling groups
     name: Coolant system tightness and level
+    schedule_page: "84"
+    description: "Check hoses and clamps for leaks, and that coolant is visible in the lower part of the filler tube. Only check with the engine cold, and never open the radiator cap when it's hot."
+    page: "55-57"
     actions: {3: C, 30: C, 60: C, 90: C, 120: C, 150: C, 180: C}
   - key: exhaust_manifold_tightness
     category: Assembling groups
     name: Exhaust manifold tightness
+    schedule_page: "84"
+    description: "Check the exhaust pipe connection at the cylinder is tight, with no exhaust leak."
     actions: {3: C, 30: C, 60: C, 90: C, 120: C, 150: C, 180: C}
   - key: drives_sliding_and_regulation
     category: Assembling groups
     name: Drives sliding and regulation
+    schedule_page: "84"
+    description: "Check the control cables and linkages (throttle, clutch and similar) slide freely and are adjusted correctly."
     actions: {3: C, 30: C, 60: C, 90: C, 120: C, 150: C, 180: C}
   - key: liquid_level_clutch_pump
     category: Assembling groups
     name: Liquid level clutch pump
+    schedule_page: "84"
+    description: "With the clutch pump level, the fluid should sit 5 mm below the top rim of the reservoir. Top up with the fluid in the manual's lubricants table, and keep it off the paint because it is corrosive."
+    page: "70"
     actions: {3: C, 30: C, 60: C, 90: C, 120: C, 150: C, 180: C}
   - key: final_transmission
     category: Assembling groups
     name: Final transmission
+    schedule_page: "84"
+    description: "The chain and sprockets. Keep the chain clean and lubricated, and set the slack to the manual's figure (about 30 mm). Replace the chain if 18 links measure 272 mm or more, and replace the sprockets whenever you fit a new chain."
+    page: "75-76"
     actions: {3: C, 30: C, 60: C, 90: C, 120: C, 150: C, 180: C}
   - key: obd2_error_memory_read
     category: Assembling groups
     name: OBD2 error memory read
+    schedule_page: "84"
+    description: "Plug a generic OBD2 diagnostic tester into the bike and read out any stored fault codes."
     actions: {3: C, 30: C, 60: C, 90: C, 120: C, 150: C, 180: C}
   - key: electric_system_blow_out_and_grease_connections
     category: Assembling groups
     name: Electric system (blow out and grease main connections)
+    schedule_page: "84"
+    description: "Blow dust and moisture out of the main electrical connectors with compressed air, then protect the contacts with a thin film of acid-free grease."
+    page: "78"
     actions: {3: C, 30: C, 60: C, 90: C, 120: C, 150: C, 180: C}
   - key: battery_12v_check_recharge
     category: Assembling groups
     name: 12V battery check/recharge
+    schedule_page: "84"
+    description: "Check the charge with a multimeter or the battery's TEST button. Below 12.4 V (MED), charge it. Below 9 V (LOW), don't charge it: replace it. Use only a charger made for lithium-ion batteries."
+    page: "80"
     actions: {3: C, 30: C, 60: C, 90: C, 120: C, 150: C, 180: C}
   - key: airbox_and_air_filter
     category: Assembling groups
     name: Airbox and air filter
+    schedule_page: "84"
+    description: "Take the air filter out and clean it. Wash it with water and soap, dry it, wet it with filter oil and squeeze out the excess. (European versions are blown clean with compressed air instead.) Check nothing is left in the airbox, and never ride without the filter."
+    page: "58-60"
     actions: {3: P, 30: P, 60: P, 90: P, 120: P, 150: P, 180: P}
 
   # Brakes
   - key: brakes_liquid_level_pads_thickness
     category: Brakes
     name: Liquid level, pads thickness
+    schedule_page: "84"
+    description: "Fluid: the level must not fall below the mark in the sight window. Pads: look at the caliper, and replace the pads if they are thinner than 2 mm."
+    page: "64-69"
     actions: {3: C, 30: C, 60: C, 90: C, 120: C, 150: C, 180: C}
   - key: brakes_disc_thickness
     category: Brakes
     name: Disc thickness
+    schedule_page: "84"
+    description: "Check the disc for damage, grooves and warping, and measure its thickness. The minimum is engraved on the disc: replace it at or near that limit."
+    page: "66"
     actions: {3: C, 30: C, 60: C, 90: C, 120: C, 150: C, 180: C}
   - key: brakes_pipe_tightness
     category: Brakes
     name: Pipe tightness
+    schedule_page: "84"
+    description: "Check the brake hoses and their fittings for leaks, cracks and tightness."
     actions: {3: C, 30: C, 60: C, 90: C, 120: C, 150: C, 180: C}
   - key: brakes_idle_travel_levers_and_drives_sliding
     category: Brakes
     name: Idle travel levers and drives sliding
+    schedule_page: "84"
+    description: "Check the free play at the brake and clutch levers and pedal, and that they move freely without sticking."
     actions: {3: C, 30: C, 60: C, 90: C, 120: C, 150: C, 180: C}
 
-  # Cycling
+  # Chassis & suspension
   - key: cycling_chassis
-    category: Cycling
+    category: Chassis & suspension
     name: Chassis
+    schedule_page: "84"
+    description: "Inspect the frame for cracks, bends and damage, especially near welds, the swing arm pivot and the steering head."
     actions: {3: C, 30: C, 60: C, 90: C, 120: C, 150: C, 180: C}
   - key: cycling_swing_arm
-    category: Cycling
+    category: Chassis & suspension
     name: Swing arm
+    schedule_page: "84"
+    description: "Check the swing arm for cracks or damage, and for play at its pivot."
     actions: {3: C, 30: C, 60: C, 90: C, 120: C, 150: C, 180: C}
   - key: cycling_mobile_parts
-    category: Cycling
+    category: Chassis & suspension
     name: Mobile parts
+    schedule_page: "84"
+    description: "Check the moving parts (levers, pedals, stand and pivots) move freely and are lubricated."
     actions: {3: C, 30: C, 60: C, 90: C, 120: C, 150: C, 180: C}
   - key: cycling_shock_absorber_and_telescopic_fork
-    category: Cycling
+    category: Chassis & suspension
     name: Shock absorber and telescopic fork
+    schedule_page: "84"
+    description: "Look for oil leaks, damaged or dirty fork seals, and general damage. The manual says fork and shock servicing is for an authorised Beta service centre."
+    page: "73"
     actions: {3: C, 30: C, 60: C, 90: C, 120: C, 150: C, 180: C}
   - key: cycling_rear_suspension_linkage
-    category: Cycling
+    category: Chassis & suspension
     name: Rear suspension linkage
+    schedule_page: "84"
+    description: "Check the linkage and shock bolts are at the manual's torque (90 Nm on the linkage pivots, 50 Nm on the shock bolts) and that the pivots move without play."
+    page: "74"
     actions: {3: C, 30: C, 60: C, 90: C, 120: C, 150: C, 180: C}
   - key: cycling_fork_cover
-    category: Cycling
+    category: Chassis & suspension
     name: Fork cover
+    schedule_page: "84"
+    description: "Check the fork protection is intact and fitted. It keeps dirt away from the fork seals."
     actions: {3: C, 30: C, 60: C, 90: C, 120: C, 150: C, 180: C}
   - key: cycling_fuel_lines
-    category: Cycling
+    category: Chassis & suspension
     name: Fuel lines
+    schedule_page: "84"
+    description: "Check the fuel lines for cracks, stiffness and leaks."
     actions: {3: C, 30: C, 60: C, 90: C, 120: C, 150: C, 180: C}
   - key: cycling_bearings_of_steering
-    category: Cycling
+    category: Chassis & suspension
     name: Bearings of steering
+    schedule_page: "84"
+    description: "Rock the fork back and forth to feel for play. If there is any, loosen the clamp screws and tighten the adjuster nut (33 Nm) until the play is gone but the steering still turns freely, then re-tighten the screws to the manual's torques."
+    page: "72"
     actions: {3: C, 30: C, 60: C, 90: C, 120: C, 150: C, 180: C}
   - key: cycling_bolts
-    category: Cycling
+    category: Chassis & suspension
     name: Bolts
+    schedule_page: "84"
+    description: "Check the important chassis bolts are tight against the manual's torque overview."
+    page: "85"
     actions: {3: C, 30: C, 60: C, 90: C, 120: C, 150: C, 180: C}
 
   # Wheels
   - key: wheels_spokes_and_rim_coaxiality
     category: Wheels
     name: Wheel spokes and rim coaxiality
+    schedule_page: "84"
+    description: "Check every spoke is tight, and spin each wheel to check the rim runs true, with no wobble."
     actions: {3: C, 30: C, 60: C, 90: C, 120: C, 150: C, 180: C}
   - key: wheels_tyres_wear_and_pressure
     category: Wheels
     name: Tyres (wear and pressure)
+    schedule_page: "84"
+    description: "Check tread wear and look for damage, and check the pressure when the tyres are cold. The manual says to replace a damaged tyre immediately."
+    page: "74"
     actions: {3: C, 30: C, 60: C, 90: C, 120: C, 150: C, 180: C}
   - key: wheels_bearings_clearance
     category: Wheels
     name: Bearings clearance
+    schedule_page: "84"
+    description: "Rock each wheel side to side with it off the ground. Any play, or roughness when you spin it, means the wheel bearings need replacing."
     actions: {3: C, 30: C, 60: C, 90: C, 120: C, 150: C, 180: C}
 
 notes:
+  - "In the manual's key, Check (C) means check, then clean, adjust, lubricate or replace as necessary. The other marks are S replace, R adjust, P clean and T tighten."
   - "After first 100 km, recheck rear sprocket, brake discs, brake calipers, pinion, brake pedal."
 
 suspension: {}
+
+# The same manual covers the other RR 2T bikes. The 250 follows the 250/300
+# schedule and suspension; the 125 and 200 differ in the rows the manual
+# splits "125/200" vs "250/300" (page 83) and have their own suspension settings.
+variants:
+  - key: beta-250-rr-race-2026
+    display_name: "2026 Beta 250 RR Race"
+    engine: "250"
+
+  - key: beta-200-rr-race-2026
+    display_name: "2026 Beta 200 RR Race"
+    engine: "125/200"
+    overrides: &small_bore_schedule
+      driving_clutch_disks_coated: {actions: {30: C, 60: S, 90: C, 120: S, 150: C, 180: S}}
+      piston_and_segments: {every_hours: 40, action: S}
+      connecting_rod: {actions: {60: S, 120: S, 180: S}}
+      drive_shaft_bearings_and_seals: {actions: {60: S, 120: S, 180: S}}
+      gearbox_surface_appearance: {actions: {60: C, 120: C, 180: C}}
+      gearbox_bearings_primary_shaft: {actions: {60: S, 120: S, 180: S}}
+    suspension: {}
+
+  - key: beta-125-rr-race-2026
+    display_name: "2026 Beta 125 RR Race"
+    engine: "125"
+    # The manual lists the battery only for the 200, 250 and 300.
+    omit: [battery_12v_check_recharge]
+    overrides: *small_bore_schedule
+    suspension: {}

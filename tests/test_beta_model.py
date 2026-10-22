@@ -69,16 +69,16 @@ EXPECTED_GRID: list[tuple[str, str, dict]] = [
     ("Brakes", "Pipe tightness", _all("C")),
     ("Brakes", "Idle travel levers and drives sliding", _all("C")),
 
-    # Cycling -- row covers 9 named parts
-    ("Cycling", "Chassis", _all("C")),
-    ("Cycling", "Swing arm", _all("C")),
-    ("Cycling", "Mobile parts", _all("C")),
-    ("Cycling", "Shock absorber and telescopic fork", _all("C")),
-    ("Cycling", "Rear suspension linkage", _all("C")),
-    ("Cycling", "Fork cover", _all("C")),
-    ("Cycling", "Fuel lines", _all("C")),
-    ("Cycling", "Bearings of steering", _all("C")),
-    ("Cycling", "Bolts", _all("C")),
+    # Chassis & suspension -- row covers 9 named parts
+    ("Chassis & suspension", "Chassis", _all("C")),
+    ("Chassis & suspension", "Swing arm", _all("C")),
+    ("Chassis & suspension", "Mobile parts", _all("C")),
+    ("Chassis & suspension", "Shock absorber and telescopic fork", _all("C")),
+    ("Chassis & suspension", "Rear suspension linkage", _all("C")),
+    ("Chassis & suspension", "Fork cover", _all("C")),
+    ("Chassis & suspension", "Fuel lines", _all("C")),
+    ("Chassis & suspension", "Bearings of steering", _all("C")),
+    ("Chassis & suspension", "Bolts", _all("C")),
 
     # Wheels -- row covers 3 named parts
     ("Wheels", "Wheel spokes and rim coaxiality", _all("C")),
@@ -122,3 +122,77 @@ def test_beta_model_suspension_source_notes_2025_caveat():
     assert "2026" in model.suspension.source
     assert len(model.suspension.settings) == 5
     assert model.suspension.fixed_values["Fork spring"] == "REDACTED"
+
+
+# ---- Variants: the same manual covers the 125, 200 and 250 (page 83)
+# The 125/200 rows below are read straight off the printed grid, where the
+# manual splits "125/200" from "250/300".
+SMALL_BORE_ROWS = {
+    "Driving clutch disks (coated)": {30: "C", 60: "S", 90: "C", 120: "S", 150: "C", 180: "S"},
+    "Connecting rod": {60: "S", 120: "S", 180: "S"},
+    "Drive shaft bearings and seals": {60: "S", 120: "S", 180: "S"},
+    "Surface appearance of the gearbox": {60: "C", 120: "C", 180: "C"},
+    "Gearbox bearings (primary shaft)": {60: "S", 120: "S", 180: "S"},
+}
+
+
+def _models():
+    from app.bike_models import load_bike_model_file
+
+    return {m.key: m for m in load_bike_model_file(MODEL_PATH)}
+
+
+def _schedule(model, name):
+    return next(i for i in model.items if i.name == name).schedule
+
+
+def test_250_matches_300():
+    models = _models()
+    assert [(i.name, i.schedule) for i in models["beta-250-rr-race-2026"].items] == [
+        (i.name, i.schedule) for i in models["beta-300-rr-race-2026"].items
+    ]
+
+
+def test_125_and_200_use_the_small_bore_rows():
+    models = _models()
+    for key in ("beta-200-rr-race-2026", "beta-125-rr-race-2026"):
+        for name, actions in SMALL_BORE_ROWS.items():
+            assert _schedule(models[key], name).actions == actions, (key, name)
+        piston = _schedule(models[key], "Piston and segments")
+        assert (piston.every_hours, piston.action) == (40, "S")
+
+
+def test_other_rows_are_shared_across_all_four():
+    models = _models()
+    changed = set(SMALL_BORE_ROWS) | {"Piston and segments"}
+    base = {i.name: i.schedule for i in models["beta-300-rr-race-2026"].items if i.name not in changed}
+    for key in ("beta-200-rr-race-2026", "beta-125-rr-race-2026"):
+        other = {i.name: i.schedule for i in models[key].items if i.name not in changed}
+        for name, schedule in other.items():
+            assert base[name] == schedule, (key, name)
+
+
+def test_only_the_125_omits_the_battery():
+    models = _models()
+    names = lambda key: {i.name for i in models[key].items}
+    assert "12V battery check/recharge" in names("beta-200-rr-race-2026")
+    assert "12V battery check/recharge" not in names("beta-125-rr-race-2026")
+
+
+def test_125_200_use_their_own_suspension_sheet():
+    models = _models()
+    small = models["beta-200-rr-race-2026"].suspension
+    assert small.fixed_values["Shock spring"] == "REDACTED"
+    assert small.fixed_values["Fork spring"] == "REDACTED"
+    assert models["beta-250-rr-race-2026"].suspension.fixed_values["Shock spring"] == "REDACTED"
+
+
+def test_schedule_pages_follow_the_manuals_layout():
+    """Engine and carburetor rows are printed on page 83; assembling groups,
+    brakes, chassis and wheels on page 84."""
+    from app.bike_models import load_bike_model
+
+    model = load_bike_model(MODEL_PATH)
+    for item in model.items:
+        expected = "83" if item.category in ("Engine", "Carburetor") else "84"
+        assert item.schedule_page == expected, item.name

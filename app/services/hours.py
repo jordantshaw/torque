@@ -38,3 +38,11 @@ def current_hours(events: list[HoursEventInput]) -> float:
             total += event.hours
 
     return total
+
+
+def current_hours_of(events) -> float:
+    """`current_hours` for stored event rows (anything with id, date, kind and
+    hours attributes, such as `Bike.hours_events`)."""
+    return current_hours(
+        [HoursEventInput(id=e.id, date=e.date, kind=e.kind, hours=e.hours) for e in events]
+    )

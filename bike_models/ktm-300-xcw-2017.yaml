@@ -1,0 +1,382 @@
+# Transcribed from the 2017 KTM owner's manual (art. no. 3213477en), chapter 10
+# "Service schedule" (manual pages 39-40). It covers the 125 XC-W, 150 XC-W,
+# 250 EXC, 250 XC-W, 300 EXC and 300 XC-W; this file describes the 300 XC-W
+# and its variants below. The 150 XC-W is not included: the manual's model
+# labels don't make clear which of its rows apply to it.
+#
+# Intervals are operating hours. The manual's columns are: once after 1 hour,
+# once after 5 hours, every 20 hours, every 40 hours / after every race (and,
+# for recommended work: once after 10 hours, every 40, every 80, annually).
+# A row marked in both "every 20" and "every 40" is simply every 20 hours.
+key: ktm-300-xcw-2017
+display_name: "2017 KTM 300 XC-W"
+engine: "300 2T"
+items:
+  - key: electrical_system
+    category: "Electrical"
+    name: "Electrical system function"
+    schedule_page: "39"
+    description: "Check the electrical system works: lights, brake light, kill switch and any other electrical equipment."
+    every_hours: 20
+    action: C
+    once_at: [1]
+  - key: battery
+    category: "Electrical"
+    name: "Battery (check and charge)"
+    schedule_page: "39"
+    description: "Check the battery's charge and charge it if it is low. Electric-start models only."
+    every_hours: 20
+    action: C
+  - key: headlight_setting
+    category: "Electrical"
+    name: "Headlight setting"
+    schedule_page: "39"
+    description: "Stand the bike upright 5 m from a wall with the rider seated and the low beam on. The light/dark boundary should sit exactly on a mark 5 cm below the height of the headlight's centre. If it doesn't, adjust the headlight range."
+    page: "97"
+    every_hours: 20
+    action: C
+    once_at: [1]
+  - key: front_brake_linings
+    category: "Brakes & clutch"
+    name: "Front brake linings"
+    schedule_page: "39"
+    description: "Check the pads' thickness: the minimum is 1 mm. Replace them if thinner, or if damaged or cracked."
+    page: "79"
+    every_hours: 20
+    action: C
+  - key: rear_brake_linings
+    category: "Brakes & clutch"
+    name: "Rear brake linings"
+    schedule_page: "39"
+    description: "Check the pads' thickness: the minimum is 1 mm. Replace them if thinner, or if damaged or cracked."
+    page: "83"
+    every_hours: 20
+    action: C
+  - key: brake_discs
+    category: "Brakes & clutch"
+    name: "Brake discs"
+    schedule_page: "39"
+    description: "Measure each disc's thickness at several points. Wear limits: front 2.5 mm, rear 3.5 mm (3.7 mm on Six Days models). Also check for damage, cracks and warping, and replace a disc that fails any of these."
+    page: "77"
+    every_hours: 20
+    action: C
+  - key: brake_lines
+    category: "Brakes & clutch"
+    name: "Brake lines"
+    schedule_page: "39"
+    description: "Check the brake hoses for damage and leaks."
+    every_hours: 20
+    action: C
+  - key: rear_brake_fluid_level
+    category: "Brakes & clutch"
+    name: "Rear brake fluid level"
+    schedule_page: "39"
+    description: "With the bike upright, check the level in the sight glass. If it has dropped below the mark, add DOT4 or DOT5.1 brake fluid. A low level means a leak or worn pads, so find out why before riding."
+    page: "82"
+    every_hours: 20
+    action: C
+  - key: foot_brake_free_travel
+    category: "Brakes & clutch"
+    name: "Foot brake lever free travel"
+    schedule_page: "39"
+    description: "Free travel at the foot brake lever should be 3-5 mm. If it isn't, adjust the lever's basic position. With no free travel the rear brake can build pressure and fail."
+    page: "81"
+    every_hours: 20
+    action: C
+  - key: front_brake_fluid_level
+    category: "Brakes & clutch"
+    name: "Front brake fluid level"
+    schedule_page: "39"
+    description: "Check the level in the reservoir. If it has dropped below the marking, the system is leaking or the pads are worn down: sort that out before riding. Use DOT4 or DOT5.1 fluid."
+    page: "77"
+    every_hours: 20
+    action: C
+  - key: hand_brake_free_travel
+    category: "Brakes & clutch"
+    name: "Hand brake lever free travel"
+    schedule_page: "39"
+    description: "Free travel at the hand brake lever must be at least 3 mm. If it isn't, adjust it. With no free travel, pressure can build up in the front brake circuit."
+    page: "76"
+    every_hours: 20
+    action: C
+  - key: clutch_fluid_level
+    category: "Brakes & clutch"
+    name: "Hydraulic clutch fluid level"
+    schedule_page: "39"
+    description: "With the reservoir held horizontal, the fluid should be 4 mm below the rim of the container. Top up with DOT4 or DOT5.1 brake fluid, and wipe up any spill straight away."
+    page: "73"
+    every_hours: 20
+    action: C
+  - key: frame_and_swingarm
+    category: "Chassis"
+    name: "Frame and swingarm"
+    schedule_page: "39"
+    description: "Inspect the frame and swingarm for cracks, bends and damage."
+    every_hours: 20
+    action: C
+  - key: swingarm_bearing
+    category: "Chassis"
+    name: "Swingarm bearing play"
+    schedule_page: "39"
+    description: "Rock the swingarm side to side and check for play in its bearing."
+    every_hours: 20
+    action: C
+  - key: shock_heim_joints
+    category: "Chassis"
+    name: "Shock absorber heim joints"
+    schedule_page: "39"
+    description: "Check the rod-end (heim) joints at the top and bottom of the shock for play and wear."
+    every_hours: 20
+    action: C
+  - key: steering_head_bearing
+    category: "Chassis"
+    name: "Steering head bearing play"
+    schedule_page: "39"
+    description: "With the bike on a stand and the bars straight, move the fork legs back and forth. You should not be able to detect any play. If you can, adjust the steering head bearing play (manual p. 59)."
+    page: "58"
+    every_hours: 20
+    action: C
+    once_at: [1]
+  - key: grease_moving_parts
+    category: "Chassis"
+    name: "Moving parts (grease)"
+    schedule_page: "39"
+    description: "Grease the side stand, levers, chain and other moving parts, and check they work smoothly."
+    every_hours: 20
+    action: C
+  - key: screws_and_nuts
+    category: "Chassis"
+    name: "Screws and nuts"
+    schedule_page: "39"
+    description: "Check the screws and nuts are tight."
+    every_hours: 20
+    action: C
+    once_at: [1]
+  - key: cables
+    category: "Chassis"
+    name: "Cables"
+    schedule_page: "39"
+    description: "Check the cables for damage and that they are routed without sharp bends."
+    every_hours: 20
+    action: C
+  - key: throttle_cables
+    category: "Chassis"
+    name: "Throttle cables"
+    schedule_page: "39"
+    description: "Check the throttle cables are undamaged, routed without sharp bends, and set correctly."
+    every_hours: 20
+    action: C
+    once_at: [1]
+  - key: tire_condition
+    category: "Wheels"
+    name: "Tire condition"
+    schedule_page: "39"
+    description: "Check both tires for cuts, embedded objects and damage, and measure the tread: the minimum is 2 mm. KTM also recommends replacing tires after 5 years at the latest, whatever their wear."
+    page: "88"
+    every_hours: 20
+    action: C
+    once_at: [1]
+  - key: tire_pressure
+    category: "Wheels"
+    name: "Tire air pressure"
+    schedule_page: "39"
+    description: "Check with the tires cold. Off-road pressure is 1.0 bar (15 psi) front and rear. For road use on EXC models it is 1.5 bar (22 psi)."
+    page: "88"
+    every_hours: 20
+    action: C
+    once_at: [1]
+  - key: wheel_bearings
+    category: "Wheels"
+    name: "Wheel bearing play"
+    schedule_page: "39"
+    description: "With the wheel off the ground, rock it side to side. Any play means the bearings need replacing."
+    every_hours: 20
+    action: C
+  - key: wheel_hubs
+    category: "Wheels"
+    name: "Wheel hubs"
+    schedule_page: "39"
+    description: "Inspect the wheel hubs for damage and cracks."
+    every_hours: 20
+    action: C
+  - key: rim_runout
+    category: "Wheels"
+    name: "Rim run-out"
+    schedule_page: "39"
+    description: "Spin each wheel and check the rim runs true, with no side-to-side or up-and-down wobble."
+    every_hours: 20
+    action: C
+    once_at: [1]
+  - key: spoke_tension
+    category: "Wheels"
+    name: "Spoke tension"
+    schedule_page: "39"
+    description: "Strike each spoke briefly with a screwdriver blade. Spokes of the same length and diameter should all ring with the same high note. A different note means a different tension, so correct it. Spoke nipple torque is 6 Nm."
+    page: "89"
+    every_hours: 20
+    action: C
+    once_at: [1]
+  - key: chain_sprockets_guide
+    category: "Drivetrain"
+    name: "Chain, sprockets and chain guide"
+    schedule_page: "39"
+    description: "Check both sprockets for wear. Pull the chain up with 10-15 kg of force and measure 18 links on the lower run: replace the chain if they span more than 272 mm. Replace the chain and both sprockets together."
+    page: "70"
+    every_hours: 20
+    action: C
+  - key: chain_tension
+    category: "Drivetrain"
+    name: "Chain tension"
+    schedule_page: "39"
+    description: "With the bike on a stand, pull the chain up at the end of the chain slider: the tension should be 55-58 mm. Adjust with the screws on both sides so the marks line up, then tighten the rear axle nut (80 Nm)."
+    page: "69"
+    every_hours: 20
+    action: C
+    once_at: [1]
+  - key: spark_plug
+    category: "Engine"
+    name: "Spark plug and spark plug connector"
+    schedule_page: "39"
+    description: "Replace the spark plug and its connector."
+    every_hours: 40
+    action: S
+  - key: inlet_membrane
+    category: "Engine"
+    name: "Inlet membrane"
+    schedule_page: "39"
+    description: "Check the inlet membrane (the reed petals in the intake) for cracks and for a poor seal."
+    every_hours: 20
+    action: C
+  - key: gear_oil
+    category: "Engine"
+    name: "Gear oil"
+    schedule_page: "39"
+    description: "Check the level by removing the gear oil monitoring screw: a small amount of oil should run out. To change it, drain the oil with the engine at operating temperature, and refill with the oil in the manual's operating substances table."
+    page: "112"
+    every_hours: 40
+    action: S
+    once_at: [5]
+  - key: idle
+    category: "Engine"
+    name: "Idle"
+    schedule_page: "39"
+    description: "Check the engine idles steadily once warm, and adjust it if not."
+    every_hours: 20
+    action: C
+  - key: hoses_and_sleeves
+    category: "Cooling & intake"
+    name: "Hoses and sleeves"
+    schedule_page: "39"
+    description: "Check all hoses (fuel, cooling, breather, drain) and sleeves for cracks, leaks and incorrect routing."
+    every_hours: 20
+    action: C
+    once_at: [1]
+  - key: coolant_level
+    category: "Cooling & intake"
+    name: "Antifreeze and coolant level"
+    schedule_page: "39"
+    description: "Check only with the engine cold, and never open the radiator or hoses when it is hot: the coolant is under pressure and can scald."
+    page: "99"
+    every_hours: 20
+    action: C
+    once_at: [1]
+  - key: air_filter
+    category: "Cooling & intake"
+    name: "Air filter and air filter box"
+    schedule_page: "39"
+    description: "Wash the filter thoroughly in air filter cleaner and let it dry, squeezing it dry and never wringing it out. Oil it with filter oil, and clean the airbox and the intake flange. Never ride without the filter, and don't clean foam with fuel."
+    page: "63-64"
+    every_hours: 20
+    action: P
+  - key: silencer_packing
+    category: "Cooling & intake"
+    name: "Main silencer glass fiber packing"
+    schedule_page: "39"
+    description: "The glass fiber packing in the main silencer burns out over time, making the bike louder and changing how it performs. Replace it once the silencer has cooled."
+    page: "65"
+    every_hours: 20
+    action: S
+  - key: final_check
+    category: "General"
+    name: "Final check and test ride"
+    schedule_page: "39"
+    description: "Check the bike for safe operation and take a test ride."
+    every_hours: 20
+    action: C
+    once_at: [1, 5]
+  - key: carburetor
+    category: "Engine"
+    name: "Carburetor components"
+    schedule_page: "40"
+    description: "Check the carburetor components and adjust them as needed."
+    every_hours: 80
+    action: C/R
+  - key: fork_service
+    category: "Suspension"
+    name: "Fork service"
+    schedule_page: "40"
+    description: "Have the fork serviced (oil and seals). A workshop job."
+    every_hours: 40
+    action: S
+    once_at: [10]
+  - key: shock_service
+    category: "Suspension"
+    name: "Shock absorber service"
+    schedule_page: "40"
+    description: "Have the shock serviced. It is filled with highly compressed nitrogen, so don't open it yourself."
+    every_hours: 40
+    action: S
+  - key: starter_drive
+    category: "Engine"
+    name: "Starter drive"
+    schedule_page: "40"
+    description: "Check the electric starter drive. Electric-start models only."
+    every_hours: 40
+    action: C
+  - key: piston_and_cylinder
+    category: "Engine"
+    name: "Piston and cylinder"
+    schedule_page: "40"
+    description: "Replace the piston and check the cylinder bore for wear and scoring. A workshop job."
+    every_hours: 80
+    action: S
+  - key: minor_engine_service
+    category: "Engine"
+    name: "Minor engine service"
+    schedule_page: "40"
+    description: "Check the exhaust control works smoothly and check the clutch. A workshop job."
+    every_hours: 40
+    action: C
+  - key: major_engine_service
+    category: "Engine"
+    name: "Major engine service"
+    schedule_page: "40"
+    description: "Remove the engine and replace the connecting rod, rod bearing and crank pin. Check the transmission and shift mechanism, and replace all engine bearings. A workshop job."
+    every_hours: 80
+    action: S
+
+notes:
+  - "Work the manual schedules annually (not tracked here, because this app counts hours): change the front brake fluid, the rear brake fluid and the hydraulic clutch fluid, and lubricate the steering head bearing."
+  - "The recommended-work intervals shown are for normal use. When used for motorsports the manual halves them: fork and shock service, starter drive check and minor engine service every 10 hours (normally 40), and carburetor check, piston/cylinder and major engine service every 40 hours (normally 80)."
+  - "In the manual's required-work table, 'once after 1 hour' and 'once after 5 hours' are one-time break-in services; the 20-hour rows then repeat. The manual also asks you to record each service in KTM Dealer.net and the Service and Warranty Booklet."
+
+suspension: {}
+
+variants:
+  - key: ktm-300-exc-2017
+    display_name: "2017 KTM 300 EXC"
+    engine: "300 2T"
+  - key: ktm-250-xcw-2017
+    display_name: "2017 KTM 250 XC-W"
+    engine: "250 2T"
+  - key: ktm-250-exc-2017
+    display_name: "2017 KTM 250 EXC"
+    engine: "250 2T"
+  - key: ktm-125-xcw-2017
+    display_name: "2017 KTM 125 XC-W"
+    engine: "125 2T"
+    # The manual's battery and starter-drive rows apply to the 250/300 models
+    # (and US XC-W), and its piston row is separate for the 125 XC-W EU.
+    omit: [battery, starter_drive]
+    overrides:
+      piston_and_cylinder: {every_hours: 40, action: S}

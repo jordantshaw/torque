@@ -25,8 +25,12 @@ class ActionsSchedule:
 
 @dataclass(frozen=True)
 class EveryHoursSchedule:
+    """Do `action` every `every_hours`, plus once at each hour in `once_at`
+    (a break-in check, e.g. "after 1 hour, then every 20")."""
+
     every_hours: int
     action: str
+    once_at: tuple[int, ...] = ()
 
 
 ItemSchedule = ActionsSchedule | EveryHoursSchedule
@@ -84,17 +88,22 @@ def detect_projection(hours: list[int], actions: list[str]) -> Projection | None
     return None
 
 
+def first_unrecorded_repeat(every_hours: int, recorded_hours: set[int]) -> int:
+    """The first multiple of `every_hours` that isn't in `recorded_hours`."""
+    k = 1
+    while k * every_hours in recorded_hours:
+        k += 1
+    return k * every_hours
+
+
 def next_point(schedule: ItemSchedule, recorded_hours: set[int]) -> int | None:
     """Return the next hour at which this item is due, skipping hours
     already recorded as serviced. Returns None if nothing further is due
     and the schedule can't be trusted to project further."""
     if isinstance(schedule, EveryHoursSchedule):
-        k = 1
-        while True:
-            candidate = k * schedule.every_hours
-            if candidate not in recorded_hours:
-                return candidate
-            k += 1
+        pending_once = [h for h in schedule.once_at if h not in recorded_hours]
+        repeat = first_unrecorded_repeat(schedule.every_hours, recorded_hours)
+        return min([repeat, *pending_once])
 
     sorted_hours = sorted(schedule.actions.keys())
     for hour in sorted_hours:
@@ -119,7 +128,7 @@ def action_at(schedule: ItemSchedule, hour: int) -> str | None:
     """Return the action due at the given hour, or None if the schedule
     doesn't define (or can't safely project) an action at that hour."""
     if isinstance(schedule, EveryHoursSchedule):
-        if hour > 0 and hour % schedule.every_hours == 0:
+        if hour in schedule.once_at or (hour > 0 and hour % schedule.every_hours == 0):
             return schedule.action
         return None
 

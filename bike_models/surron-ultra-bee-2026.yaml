@@ -1,0 +1,112 @@
+# Transcribed from the 2026 Ultra Bee HP X owner's manual, chapter 10
+# ("Maintenance Schedule", page 10.2). The manual schedules by distance, so
+# this model's unit is km and every number below is a km interval.
+key: surron-ultra-bee-2026
+display_name: "2026 Sur-Ron Ultra Bee (2025 motor)"
+engine: "2025 motor"
+unit: km
+upcoming_window: 50
+items:
+  # Brakes
+  - key: brake_pads
+    category: Brakes
+    name: Brake pads (wear)
+    schedule_page: "10.2"
+    description: "Check the remaining pad thickness by looking from the side of the caliper. The manual says to replace pads thinner than 5 mm, and to always replace both pads together. Bed new pads in gently at low speed."
+    page: "10.6-10.7"
+    actions: {100: C, 500: C, 2000: C, 5000: C/S, 10000: C/S, 20000: S}
+  - key: brake_disc
+    category: Brakes
+    name: Brake disc (wear)
+    schedule_page: "10.2"
+    description: "Check the disc for wear and damage. The manual gives a minimum thickness of 2.5 mm."
+    page: "10.6"
+    actions: {500: C, 5000: C/S, 10000: C/S, 20000: S}
+  - key: brake_fluid
+    category: Brakes
+    name: Brake fluid (DOT4)
+    schedule_page: "10.2"
+    description: "Check the level through the inspection window on the master cylinder. If it is well below one-third of the window, look for worn pads or a leak before topping up. Use only fresh DOT4 from a sealed container, and keep it off painted and plastic parts."
+    page: "10.6"
+    actions: {100: C, 2000: C, 10000: C/S}
+  # Drivetrain
+  - key: chain
+    category: Drivetrain
+    name: Chain
+    schedule_page: "10.2"
+    description: "Keep the chain and sprockets clean and lubricated. With the rear wheel off the ground, move the chain up and down by hand: the slack should be 10-25 mm. To adjust, loosen the rear axle nut, turn both adjuster bolts by the same amount, then re-tighten and test ride."
+    page: "10.10-10.11"
+    actions: {100: C/R, 500: C/R, 2000: C/R, 5000: C/S, 10000: C/S, 20000: S}
+  - key: sprockets
+    category: Drivetrain
+    name: Sprockets (front and rear)
+    schedule_page: "10.2"
+    description: "Check the front and rear sprockets for hooked or worn teeth. Replace them together with the chain when worn."
+    actions: {2000: C, 5000: C/S, 10000: C/S, 20000: C/S}
+  - key: primary_belt_and_pulley
+    category: Drivetrain
+    name: Primary belt and primary drive pulley
+    schedule_page: "10.2"
+    description: "Inspect the belt for cracks, fraying or missing teeth, and the pulley for wear. The manual suggests a Sur-Ron dealer for work you lack the tools or experience for."
+    actions: {2000: C/R, 10000: C/S, 20000: S}
+  # Chassis
+  - key: fork_and_shock
+    category: Chassis
+    name: Front fork and rear shock
+    schedule_page: "10.2"
+    description: "Wipe mud and sand off the fork tubes and shock after each ride, and don't pressure-wash upward at the dust seals. Use a neutral cleaner, then a light layer of grease on the tubes. Never open the shock: it holds high-pressure gas."
+    page: "10.8"
+    actions: {5000: C/R, 10000: C/R}
+  - key: bearings
+    category: Chassis
+    name: Bearings
+    schedule_page: "10.2"
+    description: "Check the wheel, steering and swingarm bearings for play or roughness, and replace any that are worn."
+    actions: {2000: C, 5000: C/R, 10000: C/S}
+  - key: swingarm_protection_block
+    category: Chassis
+    name: Swingarm protection block
+    schedule_page: "10.2"
+    description: "Check the rubber protection blocks on the swingarm, which stop the chain damaging it. Replace them if worn or damaged."
+    page: "10.10"
+    actions: {2000: C, 10000: C/S, 20000: C/S}
+  - key: screw_torque
+    category: Chassis
+    name: Screw torque
+    schedule_page: "10.2"
+    description: "Check the bolts against the manual's torque table (for example handlebar 25 Nm, front axle 60 Nm, rear axle 140 Nm). The manual also says to check them before every dirt track or trail ride."
+    page: "10.3-10.4"
+    actions: {2000: C}
+  # Wheels
+  - key: tires
+    category: Wheels
+    name: Tires (wear)
+    schedule_page: "10.2"
+    description: "Check the tread for cuts, cracks, bulges and uneven wear, and replace damaged tires. The manual lists 225 kPa front and rear, and gives 100-150 kPa as the range for off-road tires on dirt track or trail. Always check cold, with a gauge."
+    page: "10.9"
+    actions: {20000: S}
+  - key: wheel_spokes
+    category: Wheels
+    name: Wheel spokes
+    schedule_page: "10.2"
+    description: "Check for loose, bent or missing spokes and re-tighten them, and check the rim for bends or cracks."
+    page: "10.9"
+    actions: {100: R, 5000: R, 10000: R}
+  # Electrical
+  - key: tilt_switch
+    category: Electrical
+    name: Tilt switch
+    schedule_page: "10.2"
+    description: "A safety switch that cuts power if the bike falls over. Have it checked that it triggers correctly. The manual gives no test procedure."
+    actions: {2000: C}
+
+notes:
+  - "Before every ride, check: tire wear, battery pack voltage, dashboard warning codes, front fork and rear shock, lights, and wheel spokes."
+  - "Where both a distance and a time are listed, follow whichever comes first: the 10,000 km service is also due every 12 months, and the 20,000 km service every 24 months. This app only tracks distance, so keep an eye on the calendar yourself."
+  - "Have the bike serviced by an authorized Sur-Ron dealer at least once every 6 months, regardless of distance ridden. The schedule assumes average on-road riding; service more often in wet, dusty, or trail conditions."
+  - "Use the battery compartment cap gas strut at least once every 5 months."
+  - "Check the tightening torque of all screws and bolts before every dirt track or trail ride."
+  - "Brake fluid is DOT4."
+  - "Actions: Check or adjust (C/R) and Check or replace (C/S) mean inspect first, then adjust or replace if needed."
+
+suspension: {}
