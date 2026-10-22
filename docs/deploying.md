@@ -26,6 +26,9 @@ docker compose up -d --build
 Open `http://<machine>:8000`. The database is created at `./data/app.db`, on the
 host, so it survives rebuilds and `docker compose down`.
 
+The container restarts by itself after a crash or a reboot of the machine, until
+you stop it with `docker compose stop`.
+
 ## Change the port
 
 Edit the left-hand number in `docker-compose.yml`, then recreate the container:
