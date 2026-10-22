@@ -1,0 +1,8 @@
+# Send only what the image needs to the build; never the database or git history.
+*
+!pyproject.toml
+!uv.lock
+!app
+!bike_models
+**/__pycache__
+**/*.pyc

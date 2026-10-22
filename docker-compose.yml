@@ -7,3 +7,17 @@ services:
       - ./data:/data
     environment:
       - DATABASE_URL=sqlite:////data/app.db
+      # Optional hardening; see docs/deploying.md. Empty means "not set".
+      - ALLOWED_HOSTS=${ALLOWED_HOSTS:-}
+      - TORQUE_USERNAME=${TORQUE_USERNAME:-}
+      - TORQUE_PASSWORD=${TORQUE_PASSWORD:-}
+    # Run unprivileged, with a read-only filesystem and no extra capabilities.
+    # On Linux, if ./data isn't writable by uid 1000, set TORQUE_UID/TORQUE_GID.
+    user: "${TORQUE_UID:-1000}:${TORQUE_GID:-1000}"
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
