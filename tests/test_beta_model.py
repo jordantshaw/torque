@@ -1,13 +1,13 @@
 """Cross-check: the real Beta 300 RR Race model file against an
 independent transcription of the manual's printed grid.
 
-EXPECTED_GRID is transcribed directly from the spec's "Transcribed
-schedule (250/300)" table (docs/superpowers/specs/2026-10-19-moto-maintenance-design.md),
-not derived from the YAML file. This is intentional duplication: the
+EXPECTED_GRID is transcribed directly from the manual's printed schedule
+(Beta RR 2T owner's manual, pages 83-84; the 250/300 rows), not derived from
+the YAML file. This is intentional duplication: the
 point is that two independent readings of the manual agree, not that
 the test is DRY with the fixture it's checking.
 
-"All" expands to hours {3, 30, 60, 90, 120, 150, 180} per the spec.
+"All" expands to hours {3, 30, 60, 90, 120, 150, 180}, as printed.
 """
 
 from pathlib import Path

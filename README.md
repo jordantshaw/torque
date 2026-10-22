@@ -113,7 +113,7 @@ app/
   templates/        Jinja pages and htmx partials
   static/           style.css and htmx
 bike_models/        one YAML file per manual
-docs/               guides, plus the original design spec and plan
+docs/               guides
 tests/              pytest suite
 ```
 
