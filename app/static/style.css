@@ -1287,6 +1287,120 @@ a.hour-meter:hover .hour-meter-edit {
   padding: 1rem 0;
 }
 
+/* ---------- Carb ---------- */
+.carb-panel {
+  display: grid;
+  gap: 1.75rem;
+}
+
+.carb-panel > .panel {
+  margin: 0;
+}
+
+.carb-tiles {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.carb-tile {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 1rem 1.2rem;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  min-width: 0;
+}
+
+.carb-tile-label {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.carb-tile-value {
+  font-size: 1.375rem;
+  font-weight: 800;
+  overflow-wrap: anywhere;
+}
+
+.carb-tile-value.carb-tile-empty {
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--muted);
+}
+
+.carb-changed {
+  margin: 0.75rem 0 0;
+  color: var(--muted);
+}
+
+.carb-form {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+  gap: 0.75rem;
+  align-items: end;
+}
+
+.carb-form .carb-note {
+  grid-column: 1 / -1;
+}
+
+.carb-form .btn {
+  justify-self: start;
+}
+
+.carb-list {
+  list-style: none;
+  display: grid;
+  gap: 0.5rem;
+}
+
+.carb-item {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.8rem 1rem;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+
+.carb-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.carb-date-label {
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.carb-start {
+  font-weight: 700;
+}
+
+.carb-changes {
+  list-style: none;
+  display: grid;
+  gap: 0.1rem;
+}
+
+.carb-nochange,
+.carb-note-text {
+  color: var(--muted);
+}
+
+.carb-list > .empty {
+  padding: 1rem 0;
+}
+
 /* ---------- Suspension ---------- */
 .table-wrap {
   overflow-x: auto;
@@ -1389,6 +1503,10 @@ a.hour-meter:hover .hour-meter-edit {
 
   .rides-grid {
     grid-template-columns: minmax(0, 1fr);
+  }
+
+  .carb-tiles {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .rides-grid > .panel,

@@ -17,11 +17,13 @@ MAX_ID = 2**31 - 1
 MAX_READING = 1_000_000  # hours or km, in the stored unit
 MAX_NICKNAME = 100
 MAX_NOTES = 1000
+MAX_CARB_VALUE = 50
 _ISO_DATE = re.compile(r"\d{4}-\d{2}-\d{2}")
 
 # Path parameters: out-of-range ids are rejected (422) instead of reaching SQLite.
 BikeId = Annotated[int, Path(ge=1, le=MAX_ID)]
 RideId = Annotated[int, Path(ge=1, le=MAX_ID)]
+CarbId = Annotated[int, Path(ge=1, le=MAX_ID)]
 ServicePoint = Annotated[int, Path(ge=1, le=MAX_READING)]
 
 

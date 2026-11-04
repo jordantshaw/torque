@@ -1,0 +1,63 @@
+<div id="carb-panel" class="carb-panel">
+  <section class="carb-current">
+    <div class="carb-tiles">
+      {% for attr, label in fields %}
+      <div class="carb-tile">
+        <span class="carb-tile-label">{{ label }}</span>
+        <span class="carb-tile-value{% if not (current and current[attr]) %} carb-tile-empty{% endif %}">{% if current and current[attr] %}{{ current[attr] }}{% else %}Not recorded{% endif %}</span>
+      </div>
+      {% endfor %}
+    </div>
+    {% if current %}<p class="carb-changed">Last changed {{ current.date }}</p>{% endif %}
+  </section>
+
+  <section class="panel">
+    <h2>Log a change</h2>
+    {% if error %}
+    <p class="form-error">{{ error }}</p>
+    {% endif %}
+    <form class="carb-form" hx-post="/bikes/{{ bike.id }}/carb" hx-target="#carb-panel" hx-swap="outerHTML">
+      <label class="carb-date">Date<input type="date" name="date" value="{{ values.date }}"></label>
+      {% for attr, label in fields %}
+      <label>{{ label }}<input type="text" name="{{ attr }}" value="{{ values[attr] }}"></label>
+      {% endfor %}
+      <label class="carb-note">Note<input type="text" name="note" value="{{ values.note }}" placeholder="Optional"></label>
+      <button type="submit" class="btn btn-primary">Save change</button>
+    </form>
+  </section>
+
+  <section class="carb-history">
+    <h2>History</h2>
+    <ul class="carb-list">
+      {% for entry in history %}
+      <li class="carb-item">
+        <div class="carb-info">
+          <span class="carb-date-label">{{ entry.setting.date }}</span>
+          {% if entry.is_start %}
+          <span class="carb-start">Starting setup</span>
+          {% endif %}
+          {% if entry.changes %}
+          <ul class="carb-changes">
+            {% for change in entry.changes %}
+            {% if entry.is_start %}
+            <li>{{ change.label }} {{ change.new }}</li>
+            {% else %}
+            <li>{{ change.label }} {{ change.old }} → {{ change.new }}</li>
+            {% endif %}
+            {% endfor %}
+          </ul>
+          {% elif not entry.is_start %}
+          <span class="carb-nochange">No changes</span>
+          {% endif %}
+          {% if entry.setting.note %}<span class="carb-note-text">{{ entry.setting.note }}</span>{% endif %}
+        </div>
+        <form class="carb-delete-form" hx-post="/bikes/{{ bike.id }}/carb/{{ entry.setting.id }}/delete" hx-target="#carb-panel" hx-swap="outerHTML" hx-confirm="Delete this entry?">
+          <button type="submit" class="btn btn-quiet btn-danger">Delete</button>
+        </form>
+      </li>
+      {% else %}
+      <li class="empty">No setup logged yet. Log your starting setup above.</li>
+      {% endfor %}
+    </ul>
+  </section>
+</div>

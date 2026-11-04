@@ -32,6 +32,8 @@ another site, so it works offline.
 - **Rides:** log rides and suspension settings. Rides move the bike's reading
   forward, and you can also set the reading directly.
 - **Suspension:** the maker's reference settings for the model, where it publishes them.
+- **Carb:** for carbureted bikes, log jetting changes (main jet, needle, needle position,
+  pilot jet, air screw) and see the current setup and what changed over time.
 - **Hours or distance:** engine hours for most bikes, kilometres for
   distance-based manuals, with a per-bike switch to show miles.
 
@@ -111,7 +113,7 @@ app/
   main.py           app factory: loads models, database, templates
   bike_models.py    loads and validates the model files
   models.py, db.py  database tables and sessions
-  routes/           pages: home (Garage), bikes, maintenance, rides, suspension
+  routes/           pages: home (Garage), bikes, maintenance, rides, suspension, carb
   services/         the logic, with no web code: schedule, due, intervals, hours, units
   templates/        Jinja pages and htmx partials
   static/           style.css and htmx

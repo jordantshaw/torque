@@ -16,6 +16,7 @@
   <a href="/bikes/{{ bike.id }}" class="bike-tab{% if request.url.path == '/bikes/' ~ bike.id %} active{% endif %}">{{ icon("wrench", 16) }}Maintenance</a>
   <a href="/bikes/{{ bike.id }}/rides" class="bike-tab{% if request.url.path == '/bikes/' ~ bike.id ~ '/rides' %} active{% endif %}">{{ icon("route", 16) }}Rides</a>
   <a href="/bikes/{{ bike.id }}/suspension" class="bike-tab{% if request.url.path == '/bikes/' ~ bike.id ~ '/suspension' %} active{% endif %}">{{ icon("sliders", 16) }}Suspension</a>
+  {% if bike_model.carburetor %}<a href="/bikes/{{ bike.id }}/carb" class="bike-tab{% if request.url.path == '/bikes/' ~ bike.id ~ '/carb' %} active{% endif %}">{{ icon("droplet", 16) }}Carb</a>{% endif %}
 </nav>
 
 {% block tab_content %}{% endblock %}
