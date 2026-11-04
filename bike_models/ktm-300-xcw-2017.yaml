@@ -10,6 +10,7 @@
 # A row marked in both "every 20" and "every 40" is simply every 20 hours.
 key: ktm-300-xcw-2017
 display_name: "2017 KTM 300 XC-W"
+carburetor: true
 engine: "300 2T"
 items:
   - key: electrical_system

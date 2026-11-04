@@ -1,5 +1,6 @@
 key: beta-300-rr-race-2026
 display_name: "2026 Beta 300 RR Race"
+carburetor: true
 engine: "250/300"
 items:
   # Engine

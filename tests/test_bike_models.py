@@ -214,3 +214,49 @@ def test_variants_can_have_their_own_suspension_file_or_inherit(tmp_path):
     assert models["base"].suspension.source == "from the file"
     assert models["own"].suspension.source == "variant file"
     assert models["same"].suspension.source == "from the file"  # inherited
+
+
+def test_carburetor_defaults_to_false(tmp_path):
+    assert load_bike_model(_model_with(tmp_path)).carburetor is False
+
+
+def test_carburetor_true_is_loaded(tmp_path):
+    assert load_bike_model(_model_with(tmp_path, "carburetor: true\n")).carburetor is True
+
+
+@pytest.mark.parametrize("bad", ['"yes"', "1", "[true]"])
+def test_carburetor_must_be_a_boolean(tmp_path, bad):
+    path = _model_with(tmp_path, f"carburetor: {bad}\n")
+    with pytest.raises(BikeModelError, match="carburetor"):
+        load_bike_model(path)
+
+
+def test_variants_inherit_and_can_override_carburetor(tmp_path):
+    variants = (
+        "variants:\n"
+        "  - {key: same, display_name: Same, engine: e}\n"
+        "  - {key: no-carb, display_name: No carb, engine: e, carburetor: false}\n"
+    )
+    path = _model_with(tmp_path, "carburetor: true\n", variants)
+    models = {m.key: m for m in load_bike_model_file(path)}
+    assert models["base"].carburetor is True
+    assert models["same"].carburetor is True
+    assert models["no-carb"].carburetor is False
+
+    variants = (
+        "variants:\n"
+        "  - {key: with-carb, display_name: With carb, engine: e, carburetor: true}\n"
+        "  - {key: plain, display_name: Plain, engine: e}\n"
+    )
+    models = {m.key: m for m in load_bike_model_file(_model_with(tmp_path, "", variants))}
+    assert models["base"].carburetor is False
+    assert models["with-carb"].carburetor is True
+    assert models["plain"].carburetor is False
+
+
+def test_shipped_models_flag_the_carbureted_bikes():
+    models = load_bike_models(Path("bike_models"))
+    carbureted = [k for k in models if k.startswith(("ktm-", "beta-"))]
+    assert carbureted
+    assert all(models[k].carburetor is True for k in carbureted)
+    assert models["surron-ultra-bee-2026"].carburetor is False
