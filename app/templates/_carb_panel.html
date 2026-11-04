@@ -1,10 +1,11 @@
 <div id="carb-panel" class="carb-panel">
-  <section class="carb-current">
+  <section>
     <div class="carb-tiles">
       {% for attr, label in fields %}
+      {% set value = current and current[attr] %}
       <div class="carb-tile">
         <span class="carb-tile-label">{{ label }}</span>
-        <span class="carb-tile-value{% if not (current and current[attr]) %} carb-tile-empty{% endif %}">{% if current and current[attr] %}{{ current[attr] }}{% else %}Not recorded{% endif %}</span>
+        <span class="carb-tile-value{% if not value %} carb-tile-empty{% endif %}">{{ value or "Not recorded" }}</span>
       </div>
       {% endfor %}
     </div>
@@ -17,7 +18,7 @@
     <p class="form-error">{{ error }}</p>
     {% endif %}
     <form class="carb-form" hx-post="/bikes/{{ bike.id }}/carb" hx-target="#carb-panel" hx-swap="outerHTML">
-      <label class="carb-date">Date<input type="date" name="date" value="{{ values.date }}"></label>
+      <label>Date<input type="date" name="date" value="{{ values.date }}"></label>
       {% for attr, label in fields %}
       <label>{{ label }}<input type="text" name="{{ attr }}" value="{{ values[attr] }}"></label>
       {% endfor %}
@@ -26,7 +27,7 @@
     </form>
   </section>
 
-  <section class="carb-history">
+  <section>
     <h2>History</h2>
     <ul class="carb-list">
       {% for entry in history %}
@@ -51,7 +52,7 @@
           {% endif %}
           {% if entry.setting.note %}<span class="carb-note-text">{{ entry.setting.note }}</span>{% endif %}
         </div>
-        <form class="carb-delete-form" hx-post="/bikes/{{ bike.id }}/carb/{{ entry.setting.id }}/delete" hx-target="#carb-panel" hx-swap="outerHTML" hx-confirm="Delete this entry?">
+        <form hx-post="/bikes/{{ bike.id }}/carb/{{ entry.setting.id }}/delete" hx-target="#carb-panel" hx-swap="outerHTML" hx-confirm="Delete this entry?">
           <button type="submit" class="btn btn-quiet btn-danger">Delete</button>
         </form>
       </li>

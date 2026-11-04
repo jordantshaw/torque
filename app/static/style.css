@@ -1240,13 +1240,15 @@ a.hour-meter:hover .hour-meter-edit {
   justify-self: start;
 }
 
-.rides-list {
+.rides-list,
+.carb-list {
   list-style: none;
   display: grid;
   gap: 0.5rem;
 }
 
-.ride-item {
+.ride-item,
+.carb-item {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -1283,7 +1285,8 @@ a.hour-meter:hover .hour-meter-edit {
   gap: 0.375rem;
 }
 
-.rides-list > .empty {
+.rides-list > .empty,
+.carb-list > .empty {
   padding: 1rem 0;
 }
 
@@ -1352,21 +1355,8 @@ a.hour-meter:hover .hour-meter-edit {
   justify-self: start;
 }
 
-.carb-list {
-  list-style: none;
-  display: grid;
-  gap: 0.5rem;
-}
-
 .carb-item {
-  display: flex;
   align-items: flex-start;
-  justify-content: space-between;
-  gap: 1rem;
-  padding: 0.8rem 1rem;
-  background: var(--panel);
-  border: 1px solid var(--line);
-  border-radius: 12px;
 }
 
 .carb-info {
@@ -1395,10 +1385,6 @@ a.hour-meter:hover .hour-meter-edit {
 .carb-nochange,
 .carb-note-text {
   color: var(--muted);
-}
-
-.carb-list > .empty {
-  padding: 1rem 0;
 }
 
 /* ---------- Suspension ---------- */

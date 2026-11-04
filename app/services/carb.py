@@ -70,5 +70,4 @@ def history(settings: Iterable[CarbSetting]) -> list[HistoryEntry]:
             HistoryEntry(setting, previous is None, changes_between(previous, _values(setting)))
         )
         previous = setting
-    entries.reverse()
-    return entries
+    return entries[::-1]

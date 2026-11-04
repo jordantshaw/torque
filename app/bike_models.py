@@ -229,12 +229,10 @@ def _suspension_from(data: dict, path: Path, context: str = "") -> Suspension:
     return _build_suspension(_read_yaml(target) or {}, target)
 
 
-def _carburetor_flag(data: dict, path: Path, context: str = "") -> bool | None:
-    """The `carburetor` flag of a model or variant: None when absent, else a
-    real boolean (a quoted "yes" or the number 1 is a mistake, not a flag)."""
-    if "carburetor" not in data:
-        return None
-    value = data["carburetor"]
+def _carburetor_flag(data: dict, path: Path, context: str = "", default: bool = False) -> bool:
+    """The `carburetor` flag of a model or variant, `default` when absent. It
+    must be a real boolean (a quoted "yes" or the number 1 is a mistake)."""
+    value = data.get("carburetor", default)
     if not isinstance(value, bool):
         where = f"{context} in {path}" if context else str(path)
         raise BikeModelError(f"{where}: 'carburetor' must be true or false, got {value!r}")
@@ -259,7 +257,7 @@ def _build_base_model(data: dict, path: Path) -> BikeModel:
     return BikeModel(
         unit=unit,
         upcoming_window=window,
-        carburetor=bool(_carburetor_flag(data, path)),
+        carburetor=_carburetor_flag(data, path),
         key=_require(data, "key", path),
         display_name=_require(data, "display_name", path),
         engine=_require(data, "engine", path),
@@ -298,13 +296,9 @@ def _build_variant(variant: dict, base: BikeModel, path: Path) -> BikeModel:
     if "suspension" in variant or "suspension_file" in variant:
         suspension = _suspension_from(variant, path, context)
 
-    carburetor = _carburetor_flag(variant, path, context)
-    if carburetor is None:
-        carburetor = base.carburetor
-
     return replace(
         base,
-        carburetor=carburetor,
+        carburetor=_carburetor_flag(variant, path, context, base.carburetor),
         key=key,
         display_name=_require(variant, "display_name", path, context=context),
         engine=_require(variant, "engine", path, context=context),

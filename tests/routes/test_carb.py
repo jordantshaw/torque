@@ -1,13 +1,6 @@
-import shutil
-from pathlib import Path
-
 import pytest
-from fastapi.testclient import TestClient
 
-from app.main import create_app
 from app.models import Bike, CarbSetting
-
-FIXTURE = Path(__file__).parent.parent / "fixtures" / "bike_models" / "conftest_bike.yaml"
 
 START = {
     "date": "2026-03-01",
@@ -21,22 +14,14 @@ START = {
 
 
 @pytest.fixture
-def client(tmp_path):
-    models = tmp_path / "models"
-    models.mkdir()
-    shutil.copy(FIXTURE, models / "conftest_bike.yaml")
-    text = FIXTURE.read_text().replace("key: test-bike", "key: carb-bike").replace(
+def bike_models_dir(bike_models_dir):
+    """The shared test models plus a carbureted copy of the test bike."""
+    text = (bike_models_dir / "conftest_bike.yaml").read_text()
+    text = text.replace("key: test-bike", "key: carb-bike").replace(
         "display_name: Test Bike", "display_name: Carb Bike\ncarburetor: true"
     )
-    (models / "carb_bike.yaml").write_text(text)
-    app = create_app(bike_models_dir=models, database_url=f"sqlite:///{tmp_path / 'test.db'}")
-    return TestClient(app, base_url="http://localhost")
-
-
-@pytest.fixture
-def db_session(client):
-    with client.app.state.sessionmaker() as session:
-        yield session
+    (bike_models_dir / "carb_bike.yaml").write_text(text)
+    return bike_models_dir
 
 
 def _bike(db_session, model_key="carb-bike"):

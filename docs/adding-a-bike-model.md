@@ -100,7 +100,7 @@ variants:
 | `engine` | yes | A short engine description. |
 | `unit` | no | `hours` (default) or `km`. |
 | `upcoming_window` | no | How close counts as "coming up", in the model's unit. Default 5 hours or 50 km. |
-| `carburetor` | no | `true` if the bike has a carburetor. Adds a Carb tab for recording jetting. Variants inherit it. |
+| `carburetor` | no | `true` if the bike has a carburetor. Adds a Carb tab for recording jetting. Variants inherit it and may override it. |
 | `items` | yes | The schedule. |
 | `notes` | no | Text lines shown at the bottom of the Maintenance tab. |
 | `suspension` | no | Reference settings. |
