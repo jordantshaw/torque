@@ -197,11 +197,16 @@ def test_deleting_the_oldest_makes_the_next_the_starting_setup(client, db_sessio
     oldest = _rows(db_session)[0]
     response = client.post(f"/bikes/{bike.id}/carb/{oldest.id}/delete")
     assert response.status_code == 200
-    assert "Starting setup" in response.text
-    history = response.text.split("Log a change", 1)[1]
-    assert "Pilot jet" in history
-    assert "38" in history
-    assert "172" in history
+    items = response.text.split('class="carb-item"')[1:]
+    assert len(items) == 1
+    item = items[0]
+    assert "Starting setup" in item
+    assert "Main jet 172" in item
+    assert "Needle NEDK" in item
+    assert "Needle position 3rd" in item
+    assert "Pilot jet 38" in item
+    assert "Air screw 2 out" in item
+    assert "→" not in item
 
 
 def test_deleting_the_last_entry_returns_to_the_empty_state(client, db_session):
