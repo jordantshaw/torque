@@ -1,8 +1,8 @@
 """SQLAlchemy ORM models for the Torque database.
 
-A `Bike` owns its `rides`, `hours_events`, and `service_records`: deleting a
-bike must delete all of them too, with no orphaned rows and no foreign-key
-error. Those three relationships are configured with
+A `Bike` owns its `rides`, `hours_events`, `service_records`, and
+`carb_settings`: deleting a bike must delete all of them too, with no orphaned
+rows and no foreign-key error. Those four relationships are configured with
 `cascade="all, delete-orphan"` so an ORM-level `session.delete(bike)` removes
 the children in the same transaction. This relies on deletes always going
 through the ORM (not raw SQL), so there is no DB-level `ON DELETE CASCADE`.
@@ -42,6 +42,9 @@ class Bike(Base):
         back_populates="bike", cascade="all, delete-orphan"
     )
     service_records: Mapped[list["ServiceRecord"]] = relationship(
+        back_populates="bike", cascade="all, delete-orphan"
+    )
+    carb_settings: Mapped[list["CarbSetting"]] = relationship(
         back_populates="bike", cascade="all, delete-orphan"
     )
 
@@ -91,3 +94,19 @@ class ServiceRecord(Base):
     notes: Mapped[str | None] = mapped_column(default=None)
 
     bike: Mapped["Bike"] = relationship(back_populates="service_records")
+
+
+class CarbSetting(Base):
+    __tablename__ = "carb_settings"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    bike_id: Mapped[int] = mapped_column(ForeignKey("bikes.id"))
+    date: Mapped[date] = mapped_column(String)
+    main_jet: Mapped[str] = mapped_column(default="")
+    needle: Mapped[str] = mapped_column(default="")
+    needle_position: Mapped[str] = mapped_column(default="")
+    pilot_jet: Mapped[str] = mapped_column(default="")
+    air_screw: Mapped[str] = mapped_column(default="")
+    note: Mapped[str | None] = mapped_column(default=None)
+
+    bike: Mapped["Bike"] = relationship(back_populates="carb_settings")
