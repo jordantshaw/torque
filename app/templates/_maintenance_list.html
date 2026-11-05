@@ -48,6 +48,7 @@
 {# The date / reading / notes form used both per item and per whole service. #}
 {% macro complete_form(action, css_class, button_label, point=none, category=none) %}
 <form class="{{ css_class }}" hx-post="{{ action }}" hx-target="#maintenance-panel" hx-swap="outerHTML">
+  <input type="hidden" name="view" value="{{ view }}">
   {% if point is not none %}<input type="hidden" name="point" value="{{ point }}">{% endif %}
   {% if category is not none %}<input type="hidden" name="category" value="{{ category }}">{% endif %}
   <label>Date<input type="date" name="date" value="{{ today }}"></label>
@@ -92,6 +93,7 @@
   </section>
 
   <form class="hours-bar" hx-post="/bikes/{{ bike.id }}/hours" hx-target="#maintenance-panel" hx-swap="outerHTML">
+    <input type="hidden" name="view" value="{{ view }}">
     <label for="hours">
       <span class="hours-bar-title">{{ unit.reading }}</span>
       <span class="hours-bar-hint">Set the current reading</span>
@@ -106,6 +108,64 @@
   <p class="form-error">{{ error }}</p>
   {% endif %}
 
+  <div class="view-bar">
+    <nav class="view-switch" aria-label="Maintenance view">
+      <a href="/bikes/{{ bike.id }}"{% if view == "scheduled" %} class="active" aria-current="page"{% endif %}>Scheduled</a>
+      <a href="/bikes/{{ bike.id }}?view=history"{% if view == "history" %} class="active" aria-current="page"{% endif %}>History</a>
+    </nav>
+    <details class="log-job" data-keep-open="log-job">
+      <summary class="btn btn-primary">{{ icon("plus", 16) }}Log unplanned job</summary>
+      <form class="log-job-form" hx-post="/bikes/{{ bike.id }}/unplanned-jobs" hx-target="#maintenance-panel" hx-swap="outerHTML">
+        <input type="hidden" name="view" value="{{ view }}">
+        <div class="log-job-fields">
+          <label>Date<input type="date" name="date" value="{{ today }}"></label>
+          <label>{{ unit.reading }}<input type="number" name="hours" min="0" step="any" value="{{ current_hours|amt_input }}"></label>
+          <label class="grow">Note<input type="text" name="note" placeholder="Bent radiators, flushed the coolant"></label>
+        </div>
+        <fieldset class="log-job-items">
+          <legend>What it covers</legend>
+          {% for group in item_choices %}
+          <details class="log-job-system">
+            <summary>{{ group.category }}</summary>
+            {% for choice in group["items"] %}
+            <label class="check-label"><input type="checkbox" name="items" value="{{ choice.key }}">{{ choice.name }}</label>
+            {% endfor %}
+          </details>
+          {% endfor %}
+        </fieldset>
+        <button type="submit" class="btn btn-primary">Save job</button>
+      </form>
+    </details>
+  </div>
+
+  {% if view == "history" %}
+  <section class="maintenance-block">
+    <h2>History <span class="count-chip">{{ history|length }}</span></h2>
+    <ul class="history-list">
+      {% for e in history %}
+      <li class="history-entry">
+        <div class="history-head">
+          <span class="history-date">{{ e.date }} · {{ e.reading|amt }}{{ unit.suffix }}</span>
+          {% if e.kind == "service" %}<span class="pill pill-muted">{{ unit.service_label(e.point) }}</span>
+          {% else %}<span class="pill pill-unplanned">Unplanned</span>{% endif %}
+        </div>
+        {% if e.item_names %}<p class="history-items">{{ e.item_names|join(", ") }}</p>{% endif %}
+        {% if e.also_covers %}<p class="history-meta">Also covers {% for p in e.also_covers %}{{ p|amt }}{{ unit.suffix }}{{ ", " if not loop.last }}{% endfor %}</p>{% endif %}
+        {% if e.counted_for %}<p class="history-meta">Counted for: {% for point, name in e.counted_for %}{{ unit.service_label(point) }} {{ name }}{{ ", " if not loop.last }}{% endfor %}</p>{% endif %}
+        {% if e.note %}<p class="history-notes">{{ e.note }}</p>{% endif %}
+        {% if e.kind == "unplanned" %}
+        <form class="history-delete" hx-post="/bikes/{{ bike.id }}/unplanned-jobs/{{ e.job_id }}/delete" hx-target="#maintenance-panel" hx-swap="outerHTML" hx-confirm="{{ 'Delete this job? The services it was counted for will be due again.' if e.counted_for else 'Delete this job?' }}">
+          <input type="hidden" name="view" value="{{ view }}">
+          <button type="submit" class="btn btn-quiet btn-danger">Delete</button>
+        </form>
+        {% endif %}
+      </li>
+      {% else %}
+      <li class="empty">No maintenance logged yet.</li>
+      {% endfor %}
+    </ul>
+  </section>
+  {% else %}
   <section class="maintenance-block">
     <h2>Services <span class="count-chip">{{ service_groups|length }}</span></h2>
     {% for g in service_groups %}
@@ -160,6 +220,7 @@
       {% for note in bike_model.notes %}<li>{{ note }}</li>{% endfor %}
     </ul>
   </section>
+  {% endif %}
   {% endif %}
 
   {% include "_hour_meter_oob.html" %}

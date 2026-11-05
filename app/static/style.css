@@ -1545,6 +1545,142 @@ a.hour-meter:hover .hour-meter-edit {
   }
 }
 
+/* Maintenance tab: Scheduled / History switch, unplanned jobs. */
+.view-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.view-switch {
+  display: inline-flex;
+  border: 1px solid var(--line-2);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.view-switch a {
+  padding: 0.4rem 1rem;
+  color: var(--muted);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.view-switch a.active {
+  color: var(--text);
+  background: var(--panel-2);
+}
+
+.log-job {
+  flex: 1 1 100%;
+}
+
+.log-job > summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  float: right;
+}
+
+.log-job[open] > summary {
+  float: none;
+  margin-bottom: 0.75rem;
+}
+
+.log-job-form {
+  display: grid;
+  gap: 0.75rem;
+  padding: 1rem;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+
+.log-job-fields {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.log-job-fields label {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.log-job-fields label.grow {
+  flex: 1 1 14rem;
+}
+
+.log-job-items {
+  border: 0;
+  padding: 0;
+  margin: 0;
+}
+
+.log-job-items legend {
+  margin-bottom: 0.4rem;
+  font-weight: 700;
+}
+
+.log-job-system > summary {
+  padding: 0.3rem 0;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.log-job-system .check-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.2rem 0 0.2rem 1rem;
+}
+
+.pill-unplanned {
+  color: var(--accent);
+  background: rgb(56 189 248 / 0.14);
+}
+
+.history-list {
+  list-style: none;
+  padding: 0;
+}
+
+.history-entry {
+  position: relative;
+  padding: 0.75rem 0;
+  border-top: 1px solid var(--line);
+}
+
+.history-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.history-date {
+  font-weight: 700;
+}
+
+.history-items,
+.history-meta {
+  margin: 0.25rem 0 0;
+  font-size: 0.875rem;
+}
+
+.history-meta {
+  color: var(--muted);
+}
+
+.history-delete {
+  position: absolute;
+  top: 0.6rem;
+  right: 0;
+}
+
 @media (prefers-reduced-motion: reduce) {
   * {
     transition: none !important;

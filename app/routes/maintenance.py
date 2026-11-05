@@ -16,11 +16,12 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
 
 from app.db import get_session
-from app.models import HoursEvent, ServiceRecord
+from app.models import HoursEvent, ServiceRecord, UnplannedJob, UnplannedJobItem
 from app.routes.bikes import build_maintenance_context
 from app.routes.common import (
     MAX_READING,
     BikeId,
+    JobId,
     ServicePoint,
     get_bike_or_404,
     parse_date,
@@ -29,18 +30,24 @@ from app.routes.common import (
     unit_of,
 )
 from app.services.due import items_for_service_point, recorded_points_by_item
+from app.services.hours import current_hours_of
 from app.services.schedule import ItemSchedule, action_at, next_point, unrecorded_points_through
 
 maintenance_router = APIRouter()
 
 
-def _render_panel(request: Request, bike, error: str | None = None):
-    context = build_maintenance_context(request, bike)
+def _render_panel(request: Request, bike, error: str | None = None, view: str = "scheduled"):
+    context = build_maintenance_context(request, bike, view)
     context["error"] = error
     status_code = 400 if error else 200
     return request.app.state.templates.TemplateResponse(
         request, "_maintenance_list.html", context, status_code=status_code
     )
+
+
+def _view(form) -> str:
+    """Which Maintenance view the form was posted from, to re-render it."""
+    return "history" if form.get("view") == "history" else "scheduled"
 
 
 def _resolve_point(
@@ -115,7 +122,7 @@ async def set_hours(bike_id: BikeId, request: Request, session: Session = Depend
         ))
         session.commit()
 
-    return _render_panel(request, bike, error)
+    return _render_panel(request, bike, error, _view(form))
 
 
 @maintenance_router.post("/bikes/{bike_id}/items/{item_key}/complete")
@@ -132,16 +139,16 @@ async def complete_item(
     recorded = recorded_points_by_item(bike.service_records).get(item_key, set())
     point, error = _resolve_point(item.schedule, recorded, form.get("point"))
     if error is not None:
-        return _render_panel(request, bike, error)
+        return _render_panel(request, bike, error, _view(form))
 
     date_str, reading, notes, error = _parse_completion(form, unit_of(request, bike))
     if error is not None:
-        return _render_panel(request, bike, error)
+        return _render_panel(request, bike, error, _view(form))
 
     _add_with_catch_up(session, bike, item_key, item.schedule, recorded, point, date_str, reading, notes)
     session.commit()
 
-    return _render_panel(request, bike)
+    return _render_panel(request, bike, view=_view(form))
 
 
 @maintenance_router.post("/bikes/{bike_id}/service-points/{hour}/complete")
@@ -154,7 +161,7 @@ async def complete_service_point(
     form = await request.form()
     date_str, reading, notes, error = _parse_completion(form, unit_of(request, bike))
     if error is not None:
-        return _render_panel(request, bike, error)
+        return _render_panel(request, bike, error, _view(form))
 
     category = form.get("category")
     schedules = {
@@ -170,4 +177,64 @@ async def complete_service_point(
         )
     session.commit()
 
-    return _render_panel(request, bike)
+    return _render_panel(request, bike, view=_view(form))
+
+
+# A reading typed in a display unit (miles) converts back with float noise;
+# don't reject a job logged at exactly the current reading because of it.
+_READING_TOLERANCE = 0.01
+
+
+@maintenance_router.post("/bikes/{bike_id}/unplanned-jobs")
+async def log_unplanned_job(bike_id: BikeId, request: Request, session: Session = Depends(get_session)):
+    bike = get_bike_or_404(session, bike_id)
+    bike_model = request.app.state.bike_models[bike.model_key]
+    form = await request.form()
+    view = _view(form)
+    unit = unit_of(request, bike)
+
+    reading, error = parse_reading(form.get("hours"), unit, unit.reading, allow_zero=True)
+    date_str = note = None
+    if error is None:
+        date_str, error = parse_date(str(form.get("date", "")))
+    if error is None:
+        note, error = parse_notes(form.get("note"))
+    keys = list(dict.fromkeys(str(key) for key in form.getlist("items")))
+    if error is None and not set(keys) <= {item.key for item in bike_model.items}:
+        error = "Pick items from this bike's schedule."
+    if error is None and reading > current_hours_of(bike.hours_events) + _READING_TOLERANCE:
+        error = "That's above the bike's current reading. Update the reading first."
+    if error is None and not keys and not note:
+        error = "Add a note or pick at least one item."
+    if error is not None:
+        return _render_panel(request, bike, error, view)
+
+    job = UnplannedJob(bike_id=bike.id, date=date_str, engine_hours=reading, note=note)
+    job.items = [UnplannedJobItem(item_key=key) for key in keys]
+    session.add(job)
+    session.commit()
+    return _render_panel(request, bike, view=view)
+
+
+def _job_or_404(session: Session, bike, job_id: int) -> UnplannedJob:
+    job = session.get(UnplannedJob, job_id)
+    if job is None or job.bike_id != bike.id:
+        raise HTTPException(status_code=404)
+    return job
+
+
+@maintenance_router.post("/bikes/{bike_id}/unplanned-jobs/{job_id}/delete")
+async def delete_unplanned_job(
+    bike_id: BikeId, job_id: JobId, request: Request, session: Session = Depends(get_session)
+):
+    """Delete a job and every service record it was counted for, so those
+    points are due again."""
+    bike = get_bike_or_404(session, bike_id)
+    job = _job_or_404(session, bike, job_id)
+    form = await request.form()
+    session.query(ServiceRecord).filter_by(bike_id=bike.id, unplanned_job_id=job.id).delete(
+        synchronize_session=False
+    )
+    session.delete(job)
+    session.commit()
+    return _render_panel(request, bike, view=_view(form))

@@ -21,6 +21,7 @@ from app.routes.common import BikeId, get_bike_or_404, parse_nickname, unit_of
 from app.services.due import Status, due_infos, health_pct, recorded_points_by_item
 from app.services.hours import current_hours_of
 from app.services.intervals import RowState, build_intervals
+from app.services.maintenance_history import history_entries
 from app.services.units import DISPLAY_PREFERENCES
 
 bikes_router = APIRouter()
@@ -118,8 +119,23 @@ def _service_groups(bike_model, bike: Bike, hours: float, recorded, infos) -> li
     return groups
 
 
-def build_maintenance_context(request: Request, bike: Bike) -> dict:
-    """Build the template context for the Maintenance tab."""
+VIEWS = ("scheduled", "history")
+
+
+def _item_choices(bike_model) -> list[dict]:
+    """The log form's item picker: items by system, in the model's order."""
+    by_system: dict[str, list[dict]] = {}
+    for item in bike_model.items:
+        by_system.setdefault(item.category, []).append({"key": item.key, "name": item.name})
+    return [
+        {"category": name, "items": sorted(items, key=lambda i: i["name"])}
+        for name, items in by_system.items()
+    ]
+
+
+def build_maintenance_context(request: Request, bike: Bike, view: str | None = "scheduled") -> dict:
+    """Build the template context for the Maintenance tab, showing `view`
+    ("scheduled" or "history"; anything else means scheduled)."""
     bike_model = request.app.state.bike_models[bike.model_key]
     hours = current_hours_of(bike.hours_events)
     recorded = recorded_points_by_item(bike.service_records)
@@ -148,13 +164,18 @@ def build_maintenance_context(request: Request, bike: Bike) -> dict:
         "next_service": next((g for g in groups if g["status"] == RowState.LATER.value), None),
         "service_groups": groups,
         "today": date.today().isoformat(),
+        "view": view if view in VIEWS else "scheduled",
+        "history": history_entries(
+            bike.service_records, bike.unplanned_jobs, {item.key: item.name for item in bike_model.items}
+        ),
+        "item_choices": _item_choices(bike_model),
     }
 
 
 @bikes_router.get("/bikes/{bike_id}")
 def bike_page(bike_id: BikeId, request: Request, session: Session = Depends(get_session)):
     bike = get_bike_or_404(session, bike_id)
-    context = build_maintenance_context(request, bike)
+    context = build_maintenance_context(request, bike, request.query_params.get("view"))
     return request.app.state.templates.TemplateResponse(
         request, "bike_maintenance.html", context
     )

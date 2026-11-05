@@ -24,6 +24,7 @@ _ISO_DATE = re.compile(r"\d{4}-\d{2}-\d{2}")
 BikeId = Annotated[int, Path(ge=1, le=MAX_ID)]
 RideId = Annotated[int, Path(ge=1, le=MAX_ID)]
 CarbId = Annotated[int, Path(ge=1, le=MAX_ID)]
+JobId = Annotated[int, Path(ge=1, le=MAX_ID)]
 ServicePoint = Annotated[int, Path(ge=1, le=MAX_READING)]
 
 
