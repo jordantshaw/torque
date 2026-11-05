@@ -74,7 +74,7 @@ def test_delete_job_removes_its_counted_records(client, db_session):
     job = _job(db_session, bike, 25)
     db_session.add_all([
         ServiceRecord(bike_id=bike.id, item_key="oil", service_point=30, completed_date="2026-11-02", engine_hours=25, unplanned_job_id=job.id),
-        ServiceRecord(bike_id=bike.id, item_key="oil", service_point=60, completed_date="2026-11-09", engine_hours=60),
+        ServiceRecord(bike_id=bike.id, item_key="clutch_disks", service_point=30, completed_date="2026-11-09", engine_hours=31),
     ])
     db_session.commit()
     response = client.post(f"/bikes/{bike.id}/unplanned-jobs/{job.id}/delete", data={"view": "history"})
@@ -82,7 +82,7 @@ def test_delete_job_removes_its_counted_records(client, db_session):
     db_session.expire_all()
     assert db_session.query(UnplannedJob).count() == 0
     assert db_session.query(UnplannedJobItem).count() == 0
-    assert [r.service_point for r in db_session.query(ServiceRecord)] == [60]
+    assert [(r.item_key, r.service_point) for r in db_session.query(ServiceRecord)] == [("clutch_disks", 30)]
 
 
 def test_delete_job_of_other_bike_404(client, db_session):
@@ -175,3 +175,28 @@ def test_item_history_lists_unplanned_jobs(client, db_session):
     bike = _bike(db_session, hours=31)
     _job(db_session, bike, 25)
     assert "Unplanned, 2026-11-02 at 25h" in client.get(f"/bikes/{bike.id}").text
+
+
+def test_job_just_before_an_upcoming_point_is_offered_there_and_catches_up(client, db_session):
+    bike = _bike(db_session, hours=58)
+    job = _job(db_session, bike, 57)
+    html = client.get(f"/bikes/{bike.id}").text
+    sixty = html[html.index("60-hour service"):]
+    assert "You did it 1h ago, at 57h" in sixty
+    assert _count(client, bike, job).status_code == 200
+    db_session.expire_all()
+    assert {r.service_point for r in db_session.query(ServiceRecord).filter_by(item_key="oil")} == {30, 60}
+
+
+def test_deleting_a_job_behind_a_later_service_keeps_its_points_caught_up(client, db_session):
+    bike = _bike(db_session, hours=85)
+    job = _job(db_session, bike, 25)
+    db_session.add(ServiceRecord(bike_id=bike.id, item_key="oil", service_point=30, completed_date="2026-11-02", engine_hours=25, unplanned_job_id=job.id))
+    db_session.commit()
+    client.post(f"/bikes/{bike.id}/items/oil/complete", data={"point": "60", "date": "2026-11-04", "hours": 61})
+    client.post(f"/bikes/{bike.id}/unplanned-jobs/{job.id}/delete")
+    db_session.expire_all()
+    records = {r.service_point: r for r in db_session.query(ServiceRecord).filter_by(item_key="oil")}
+    assert set(records) == {30, 60}
+    assert (records[30].unplanned_job_id, records[30].covered_by_point) == (None, 60)
+    assert records[30].completed_date == "2026-11-04"

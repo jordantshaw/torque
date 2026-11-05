@@ -15,6 +15,7 @@ from app.services.schedule import ItemSchedule, next_point, unrecorded_points_th
 @dataclass(frozen=True)
 class JobNote:
     job: object  # the UnplannedJob that applies
+    point: int  # the service point the note is shown on (the highest covered)
     covered: tuple[int, ...]  # points counting it would record, ascending
     ago: float  # current reading minus the job's reading
     next_point: int | None  # the item's next point after the covered ones
@@ -32,12 +33,13 @@ def job_note(
     current: float,
     upcoming_window: float,
 ) -> JobNote | None:
-    """The note for an item's next point, or None when no job applies.
+    """The note for an item, or None when no job applies.
 
     A job applies when the item is due or coming up and the job is later than
     the item's latest service record. The highest-reading job wins (ties go to
-    the newest). Counting it covers the next point plus every other open point
-    up to the job's reading."""
+    the newest). Counting it covers every open point up to the job's reading,
+    plus the first point after the job if that one is due or coming up. The
+    note sits on the highest covered point."""
     if due.status not in (Status.DUE, Status.UPCOMING) or due.next_point is None:
         return None
     candidates = [
@@ -47,14 +49,21 @@ def job_note(
         return None
     job = max(candidates, key=lambda j: (j.engine_hours, j.id))
 
-    covered = tuple(sorted({
-        due.next_point,
-        *unrecorded_points_through(schedule, recorded | {due.next_point}, job.engine_hours),
-    }))
+    # The open points up to the job, plus the first one after it when that one
+    # is due or coming up (a job just before it is what the owner may skip).
+    below = unrecorded_points_through(schedule, recorded, job.engine_hours)
+    first_after = next_point(schedule, recorded | set(below))
+    if first_after is not None and first_after - current <= upcoming_window:
+        covered = (*below, first_after)
+    elif below:
+        covered = tuple(below)
+    else:
+        return None
     after = next_point(schedule, recorded | set(covered))
     highest = covered[-1]
     return JobNote(
         job=job,
+        point=highest,
         covered=covered,
         ago=current - job.engine_hours,
         next_point=after,

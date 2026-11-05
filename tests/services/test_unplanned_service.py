@@ -63,3 +63,15 @@ def test_job_note_no_next_point():
     assert note.gap_after_job is None
     assert note.manual_interval is None
     assert note.warn is False
+
+
+def test_job_note_targets_upcoming_point_after_the_job_when_earlier_ones_are_overdue():
+    note = _note([_job(1, 57)], 58, _due(30))
+    assert note.point == 60
+    assert note.covered == (30, 60)
+    assert (note.next_point, note.gap_after_job, note.manual_interval, note.warn) == (90, 33, 30, False)
+
+
+def test_job_note_point_is_the_highest_covered_point():
+    assert _note([_job(1, 90)], 100, _due(30)).point == 90
+    assert _note([_job(1, 25)], 31, _due(30)).point == 30

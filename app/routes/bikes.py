@@ -63,15 +63,14 @@ def item_job_note(item, bike: Bike, hours: float, recorded: dict[str, set[int]],
 
 
 def _jobs_view(bike_model, bike: Bike, hours: float, recorded, infos) -> dict:
-    """What the rows need about unplanned jobs: each item's note (for its next
-    point only), the jobs covering it (newest first), and jobs by id."""
+    """What the rows need about unplanned jobs: each item's note (shown on the
+    note's own point), the jobs covering it (newest first), and jobs by id."""
     jobs = sorted(bike.unplanned_jobs, key=lambda j: (j.date, j.engine_hours, j.id), reverse=True)
     return {
         "notes": {
             item.key: item_job_note(item, bike, hours, recorded, infos[item.key], bike_model.upcoming_window)
             for item in bike_model.items
         },
-        "next_points": {key: info.next_point for key, info in infos.items()},
         "by_item": {item.key: [j for j in jobs if item.key in j.item_keys] for item in bike_model.items},
         "by_id": {job.id: job for job in jobs},
     }
@@ -93,7 +92,7 @@ def _row(item, state: RowState, point: int | None, action: str | None, history, 
         "point": point,
         "record": record,
         "history": history.get(item.key, []),
-        "job_note": note if point is not None and point == jobs["next_points"].get(item.key) else None,
+        "job_note": note if note is not None and point == note.point else None,
         "covered_by_job": jobs["by_id"].get(record.unplanned_job_id) if record else None,
         "jobs": jobs["by_item"].get(item.key, []),
     }

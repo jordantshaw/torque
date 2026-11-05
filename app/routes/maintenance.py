@@ -228,13 +228,26 @@ async def delete_unplanned_job(
     bike_id: BikeId, job_id: JobId, request: Request, session: Session = Depends(get_session)
 ):
     """Delete a job and every service record it was counted for, so those
-    points are due again."""
+    points are due again -- unless a later service of the item was completed,
+    which (as with any completion) leaves the earlier point caught up."""
     bike = get_bike_or_404(session, bike_id)
     job = _job_or_404(session, bike, job_id)
     form = await request.form()
-    session.query(ServiceRecord).filter_by(bike_id=bike.id, unplanned_job_id=job.id).delete(
-        synchronize_session=False
-    )
+    plain = [
+        r for r in bike.service_records if r.unplanned_job_id is None and r.covered_by_point is None
+    ]
+    for record in [r for r in bike.service_records if r.unplanned_job_id == job.id]:
+        later = [
+            r for r in plain if r.item_key == record.item_key and r.service_point > record.service_point
+        ]
+        session.delete(record)
+        if later:
+            cover = min(later, key=lambda r: r.service_point)
+            session.add(ServiceRecord(
+                bike_id=bike.id, item_key=record.item_key, service_point=record.service_point,
+                completed_date=cover.completed_date, engine_hours=cover.engine_hours,
+                notes=cover.notes, covered_by_point=cover.service_point,
+            ))
     session.delete(job)
     session.commit()
     return _render_panel(request, bike, view=_view(form))
