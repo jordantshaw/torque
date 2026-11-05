@@ -26,12 +26,19 @@ def init_db(engine: Engine) -> None:
 def _add_missing_columns(engine: Engine) -> None:
     """Upgrade databases created before a column existed (create_all only
     makes missing tables, never alters existing ones)."""
-    columns = {c["name"] for c in inspect(engine).get_columns("bikes")}
-    if "distance_unit" not in columns:
-        with engine.begin() as conn:
-            conn.execute(text(
-                "ALTER TABLE bikes ADD COLUMN distance_unit VARCHAR NOT NULL DEFAULT 'km'"
-            ))
+    for table, column, ddl in _ADDED_COLUMNS:
+        columns = {c["name"] for c in inspect(engine).get_columns(table)}
+        if column not in columns:
+            with engine.begin() as conn:
+                conn.execute(text(f"ALTER TABLE {table} ADD COLUMN {column} {ddl}"))
+
+
+# (table, column, column definition) for every column added after release.
+_ADDED_COLUMNS = (
+    ("bikes", "distance_unit", "VARCHAR NOT NULL DEFAULT 'km'"),
+    ("rides", "location", "VARCHAR"),
+    ("carb_settings", "ride_id", "INTEGER"),
+)
 
 
 def get_sessionmaker(engine: Engine) -> sessionmaker[Session]:

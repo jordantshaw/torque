@@ -51,3 +51,19 @@ def test_deleting_a_bike_deletes_its_carb_settings():
         session.commit()
 
         assert session.query(CarbSetting).count() == 0
+
+
+def test_existing_database_gains_ride_location_and_carb_ride_id_columns(tmp_path):
+    from sqlalchemy import inspect, text
+
+    engine = get_engine(f"sqlite:///{tmp_path / 'old.db'}")
+    with engine.begin() as conn:
+        conn.execute(text(
+            "CREATE TABLE rides (id INTEGER PRIMARY KEY, bike_id INTEGER, date VARCHAR, hours FLOAT)"
+        ))
+        conn.execute(text(
+            "CREATE TABLE carb_settings (id INTEGER PRIMARY KEY, bike_id INTEGER, date VARCHAR)"
+        ))
+    init_db(engine)
+    assert "location" in {c["name"] for c in inspect(engine).get_columns("rides")}
+    assert "ride_id" in {c["name"] for c in inspect(engine).get_columns("carb_settings")}

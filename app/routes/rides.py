@@ -1,5 +1,5 @@
-"""Rides tab: log a ride (with optional suspension click/turn settings),
-edit it, or delete it.
+"""Rides tab: log a ride (with an optional location, suspension click/turn
+settings and, on carbureted bikes, carb settings), edit it, or delete it.
 
 Every logged ride also advances the bike's current engine hours, which is
 computed elsewhere by replaying `HoursEvent` rows (`app.services.hours`).
@@ -9,6 +9,12 @@ its event in the same transaction, editing a ride updates that SAME event
 row in place (never a second one), and deleting a ride deletes both rows.
 Letting these drift apart -- an orphaned event, a duplicate, or a ride with
 none -- would make the bike's hours total silently wrong.
+
+On a carbureted bike a ride can also carry its carb setup. When those values
+differ from the setup in effect on the ride's date, the ride gets one linked
+`CarbSetting(ride_id=ride.id)` so the change shows on the Carb tab; when they
+match, it has none. Editing a ride re-checks this and creates, updates or
+deletes that one linked entry; deleting a ride deletes it.
 """
 
 import math
@@ -19,17 +25,19 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
 
 from app.db import get_session
-from app.models import Bike, HoursEvent, Ride
+from app.models import Bike, CarbSetting, HoursEvent, Ride
 from app.routes.common import (
     MAX_READING,
     BikeId,
     RideId,
     get_bike_or_404,
     parse_date,
+    parse_location,
     parse_notes,
     parse_reading,
     unit_of,
 )
+from app.services.carb import CARB_FIELDS, changes_between, current, parse_carb_values, previous_for
 from app.services.hours import current_hours_of
 
 rides_router = APIRouter()
@@ -48,6 +56,7 @@ SUSPENSION_FIELD_BY_SETTING_NAME = {
 }
 SUSPENSION_FIELDS = tuple(SUSPENSION_FIELD_BY_SETTING_NAME.values())
 SAG_FIELDS = ("sag_static", "sag_rider")
+CARB_ATTRS = tuple(attr for attr, _ in CARB_FIELDS)
 
 
 def get_ride_or_404(session: Session, bike_id: BikeId, ride_id: int) -> Ride:
@@ -65,12 +74,43 @@ def _most_recent_ride(bike: Bike) -> Ride | None:
     return max(bike.rides, key=lambda r: (r.date, r.id))
 
 
+def _linked_carb(bike: Bike, ride_id: int) -> CarbSetting | None:
+    return next((s for s in bike.carb_settings if s.ride_id == ride_id), None)
+
+
+def _carb_values(setting: CarbSetting | None) -> dict:
+    return {attr: getattr(setting, attr) if setting else "" for attr in CARB_ATTRS}
+
+
+def _sync_linked_carb(session: Session, bike: Bike, ride: Ride, values: dict) -> None:
+    """Give `ride` a linked carb entry with `values` if they differ from the
+    setup in effect before it (ignoring its own entry); otherwise remove any."""
+    linked = _linked_carb(bike, ride.id)
+    previous = previous_for([s for s in bike.carb_settings if s is not linked], ride.date)
+    if not changes_between(previous, values):
+        if linked is not None:
+            session.delete(linked)
+        return
+    if linked is None:
+        linked = CarbSetting(bike_id=bike.id, ride_id=ride.id)
+        session.add(linked)
+    linked.date = ride.date
+    for attr, value in values.items():
+        setattr(linked, attr, value)
+
+
 def _default_form_values(bike: Bike, bike_model) -> dict:
     """Prefill values for the log-ride form's suspension fields: the most
     recent ride's values if any ride exists, else the bike model's factory
     setting (matched by setting name)."""
     recent = _most_recent_ride(bike)
-    values: dict = {"date": date.today().isoformat(), "hours": None, "notes": ""}
+    values: dict = {
+        "date": date.today().isoformat(),
+        "hours": None,
+        "notes": "",
+        "location": "",
+        **_carb_values(current(bike.carb_settings)),
+    }
 
     if recent is not None:
         for field in (*SUSPENSION_FIELDS, *SAG_FIELDS):
@@ -95,11 +135,12 @@ class RideInput(NamedTuple):
     length: float
     date: str
     notes: str | None
+    location: str | None
 
 
 def _parse_ride(form, unit) -> tuple[RideInput | None, str | None]:
-    """A ride's length, date and notes, as (fields, error). A ride has to cover
-    something, so zero is rejected."""
+    """A ride's length, date, notes and location, as (fields, error). A ride
+    has to cover something, so zero is rejected."""
     length, error = parse_reading(form.get("hours"), unit, unit.ride_label, allow_zero=False)
     if error is not None:
         return None, error
@@ -109,7 +150,20 @@ def _parse_ride(form, unit) -> tuple[RideInput | None, str | None]:
     notes, error = parse_notes(form.get("notes"))
     if error is not None:
         return None, error
-    return RideInput(length, date_str, notes), None
+    location, error = parse_location(form.get("location"))
+    if error is not None:
+        return None, error
+    return RideInput(length, date_str, notes, location), None
+
+
+def _parse_ride_and_carb(form, unit, bike_model) -> tuple[RideInput | None, dict | None, str | None]:
+    """The ride's fields plus, on a carbureted bike, its carb values (None
+    otherwise), as (fields, carb values, error)."""
+    fields, error = _parse_ride(form, unit)
+    if error is not None or not bike_model.carburetor:
+        return fields, None, error
+    carb, error = parse_carb_values(form)
+    return fields, carb, error
 
 
 def _parse_optional_number(raw, *, integer: bool) -> int | float | None:
@@ -145,8 +199,9 @@ def _submitted_form_values(form) -> dict:
         "date": str(form.get("date", "") or ""),
         "hours": str(form.get("hours", "") or ""),
         "notes": str(form.get("notes", "") or ""),
+        "location": str(form.get("location", "") or ""),
     }
-    for field in (*SUSPENSION_FIELDS, *SAG_FIELDS):
+    for field in (*SUSPENSION_FIELDS, *SAG_FIELDS, *CARB_ATTRS):
         values[field] = str(form.get(field, "") or "")
     return values
 
@@ -168,6 +223,28 @@ def _list_context(
         "action": f"/bikes/{bike.id}/rides",
         "submit_label": "Log ride",
         "cancel_url": None,
+        "carb_fields": _carb_fields(bike_model),
+    }
+
+
+def _carb_fields(bike_model):
+    """The carb inputs the ride form shows: all five on a carbureted bike, none otherwise."""
+    return CARB_FIELDS if bike_model.carburetor else ()
+
+
+def _edit_context(request: Request, bike: Bike, bike_model, ride: Ride, values: dict, error: str | None = None) -> dict:
+    return {
+        "unit": unit_of(request, bike),
+        "error": error,
+        "values": values,
+        "action": f"/bikes/{bike.id}/rides/{ride.id}",
+        "submit_label": "Save",
+        "cancel_url": f"/bikes/{bike.id}/rides",
+        "carb_fields": _carb_fields(bike_model),
+        # Keeps the `ride-{id}` id on the swapped-in element (replacing the
+        # display `<li id="ride-{id}">`), so a later failed update POST can
+        # retarget its error back onto this same element by id.
+        "wrapper_id": f"ride-{ride.id}",
     }
 
 
@@ -195,7 +272,7 @@ async def create_ride(bike_id: BikeId, request: Request, session: Session = Depe
     bike_model = request.app.state.bike_models[bike.model_key]
     form = await request.form()
 
-    fields, error = _parse_ride(form, unit_of(request, bike))
+    fields, carb, error = _parse_ride_and_carb(form, unit_of(request, bike), bike_model)
     if error is not None:
         return _render_list(request, bike, bike_model, error=error, form_values=_submitted_form_values(form))
 
@@ -204,11 +281,14 @@ async def create_ride(bike_id: BikeId, request: Request, session: Session = Depe
         date=fields.date,
         hours=fields.length,
         notes=fields.notes,
+        location=fields.location,
         **_suspension_fields_from_form(form),
     )
     session.add(ride)
     session.flush()  # assign ride.id before the linked HoursEvent references it
     session.add(HoursEvent(bike_id=bike.id, date=fields.date, kind="ride", hours=fields.length, ride_id=ride.id))
+    if carb is not None:
+        _sync_linked_carb(session, bike, ride, carb)
     session.commit()
 
     return _render_list(request, bike, bike_model)
@@ -217,27 +297,21 @@ async def create_ride(bike_id: BikeId, request: Request, session: Session = Depe
 @rides_router.get("/bikes/{bike_id}/rides/{ride_id}/edit")
 def edit_ride_form(bike_id: BikeId, ride_id: RideId, request: Request, session: Session = Depends(get_session)):
     bike = get_bike_or_404(session, bike_id)
+    bike_model = request.app.state.bike_models[bike.model_key]
     ride = get_ride_or_404(session, bike_id, ride_id)
     unit = unit_of(request, bike)
 
+    # The ride's own carb entry if it has one, else the setup in effect then.
+    carb = _linked_carb(bike, ride.id) or previous_for(bike.carb_settings, ride.date)
     values = {
         "date": ride.date,
         "hours": unit.edit_value(ride.hours),
         "notes": ride.notes or "",
+        "location": ride.location or "",
         **{field: getattr(ride, field) for field in (*SUSPENSION_FIELDS, *SAG_FIELDS)},
+        **_carb_values(carb),
     }
-    context = {
-        "unit": unit,
-        "error": None,
-        "values": values,
-        "action": f"/bikes/{bike_id}/rides/{ride.id}",
-        "submit_label": "Save",
-        "cancel_url": f"/bikes/{bike_id}/rides",
-        # Keeps the `ride-{id}` id on the swapped-in element (replacing the
-        # display `<li id="ride-{id}">`), so a later failed update POST can
-        # retarget its error back onto this same element by id.
-        "wrapper_id": f"ride-{ride.id}",
-    }
+    context = _edit_context(request, bike, bike_model, ride, values)
     return request.app.state.templates.TemplateResponse(request, "_ride_form.html", context)
 
 
@@ -248,7 +322,7 @@ async def update_ride(bike_id: BikeId, ride_id: RideId, request: Request, sessio
     ride = get_ride_or_404(session, bike_id, ride_id)
     form = await request.form()
 
-    fields, error = _parse_ride(form, unit_of(request, bike))
+    fields, carb, error = _parse_ride_and_carb(form, unit_of(request, bike), bike_model)
     if error is not None:
         # Re-render just this ride's edit form in place (not the whole
         # list, and not the "log a ride" create form) with the user's
@@ -258,15 +332,7 @@ async def update_ride(bike_id: BikeId, ride_id: RideId, request: Request, sessio
         # the success path, which swaps the whole list); `HX-Retarget`
         # overrides that for this response only, so htmx swaps this ride's
         # row instead.
-        context = {
-            "unit": unit_of(request, bike),
-            "error": error,
-            "values": _submitted_form_values(form),
-            "action": f"/bikes/{bike_id}/rides/{ride.id}",
-            "submit_label": "Save",
-            "cancel_url": f"/bikes/{bike_id}/rides",
-            "wrapper_id": f"ride-{ride.id}",
-        }
+        context = _edit_context(request, bike, bike_model, ride, _submitted_form_values(form), error)
         response = request.app.state.templates.TemplateResponse(
             request, "_ride_form.html", context, status_code=400
         )
@@ -276,6 +342,7 @@ async def update_ride(bike_id: BikeId, ride_id: RideId, request: Request, sessio
     ride.date = fields.date
     ride.hours = fields.length
     ride.notes = fields.notes
+    ride.location = fields.location
     for field, value in _suspension_fields_from_form(form).items():
         setattr(ride, field, value)
 
@@ -285,6 +352,9 @@ async def update_ride(bike_id: BikeId, ride_id: RideId, request: Request, sessio
     event = session.query(HoursEvent).filter_by(bike_id=bike.id, kind="ride", ride_id=ride.id).one()
     event.date = fields.date
     event.hours = fields.length
+
+    if carb is not None:
+        _sync_linked_carb(session, bike, ride, carb)
 
     session.commit()
 
@@ -300,6 +370,9 @@ def delete_ride(bike_id: BikeId, ride_id: RideId, request: Request, session: Ses
     event = session.query(HoursEvent).filter_by(bike_id=bike.id, kind="ride", ride_id=ride.id).one_or_none()
     if event is not None:
         session.delete(event)
+    linked = _linked_carb(bike, ride.id)
+    if linked is not None:
+        session.delete(linked)
     session.delete(ride)
     session.commit()
 

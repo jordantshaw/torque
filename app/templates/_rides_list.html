@@ -12,6 +12,7 @@
         <div class="ride-info">
           <span class="ride-date">{{ ride.date }}</span>
           <span class="ride-hours">{{ ride.hours|amt }}{{ unit.suffix }}</span>
+          {% if ride.location %}<span class="ride-location">{{ ride.location }}</span>{% endif %}
           {% if ride.notes %}<span class="ride-notes">{{ ride.notes }}</span>{% endif %}
         </div>
         <div class="ride-actions">

@@ -19,6 +19,9 @@ CARB_FIELDS: tuple[tuple[str, str], ...] = (
 
 NOT_RECORDED = "not recorded"
 
+# The longest value accepted for any one carb field.
+MAX_CARB_VALUE = 50
+
 
 class Change(NamedTuple):
     label: str
@@ -56,6 +59,17 @@ def changes_between(
         if old != new:
             changes.append(Change(label, old or NOT_RECORDED, new or NOT_RECORDED))
     return changes
+
+
+def parse_carb_values(submitted: Mapping[str, object]) -> tuple[dict | None, str | None]:
+    """The five carb values from a form, trimmed, as (values, error)."""
+    values = {}
+    for attr, label in CARB_FIELDS:
+        value = str(submitted.get(attr) or "").strip()
+        if len(value) > MAX_CARB_VALUE:
+            return None, f"{label} must be {MAX_CARB_VALUE} characters or fewer."
+        values[attr] = value
+    return values, None
 
 
 def _values(setting: CarbSetting) -> dict[str, str]:

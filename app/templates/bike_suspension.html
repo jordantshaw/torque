@@ -1,7 +1,49 @@
 {% extends "bike_base.html" %}
 
 {% block tab_content %}
-<div id="suspension-panel">
+<div id="suspension-panel" class="carb-panel">
+  <section>
+    <h2>Current setup</h2>
+    <div class="carb-tiles">
+      {% for label, value in current.items() %}
+      <div class="carb-tile">
+        <span class="carb-tile-label">{{ label }}</span>
+        <span class="carb-tile-value{% if not value %} carb-tile-empty{% endif %}">{{ value or "Not recorded" }}</span>
+      </div>
+      {% endfor %}
+    </div>
+    {% if history %}<p class="carb-changed">Last changed {{ history[0].ride.date }}</p>{% endif %}
+  </section>
+
+  <section>
+    <h2>Setup history</h2>
+    <ul class="carb-list">
+      {% for entry in history %}
+      <li class="carb-item">
+        <div class="carb-info">
+          <span class="carb-date-label">{{ entry.ride.date }}</span>
+          {% if entry.is_start %}<span class="carb-start">Starting setup</span>{% endif %}
+          {% if entry.ride.location %}<span class="carb-ride">{{ entry.ride.location }}</span>{% endif %}
+          <ul class="carb-changes">
+            {% for change in entry.changes %}
+            {% if entry.is_start %}
+            <li>{{ change.label }} {{ change.new }}</li>
+            {% else %}
+            <li>{{ change.label }} {{ change.old }} → {{ change.new }}</li>
+            {% endif %}
+            {% endfor %}
+          </ul>
+          {% if entry.ride.notes %}<span class="carb-note-text">{{ entry.ride.notes }}</span>{% endif %}
+        </div>
+      </li>
+      {% else %}
+      <li class="empty">No suspension settings logged with a ride yet. Add them when you log a ride.</li>
+      {% endfor %}
+    </ul>
+  </section>
+
+  <section class="suspension-reference">
+  <h2>Reference settings</h2>
   {% if not bike_model.suspension.settings and not bike_model.suspension.fixed_values %}
   <p class="empty">No suspension reference is available for this model.</p>
   {% endif %}
@@ -47,5 +89,6 @@
     <p><strong>Source</strong> {{ bike_model.suspension.source }}</p>
   </section>
   {% endif %}
+  </section>
 </div>
 {% endblock %}

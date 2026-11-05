@@ -11,13 +11,10 @@ from sqlalchemy.orm import Session
 from app.db import get_session
 from app.models import Bike, CarbSetting
 from app.routes.common import BikeId, CarbId, get_bike_or_404, parse_date, parse_notes, unit_of
-from app.services.carb import CARB_FIELDS, changes_between, history, previous_for
+from app.services.carb import CARB_FIELDS, changes_between, history, parse_carb_values, previous_for
 from app.services.hours import current_hours_of
 
 carb_router = APIRouter()
-
-# The longest value accepted for any one carb field.
-MAX_CARB_VALUE = 50
 
 _FORM_FIELDS = ("date", "note", *(attr for attr, _ in CARB_FIELDS))
 
@@ -52,17 +49,6 @@ def _submitted_values(form) -> dict:
     return {name: str(form.get(name) or "") for name in _FORM_FIELDS}
 
 
-def _parse_values(submitted: dict) -> tuple[dict | None, str | None]:
-    """The five carb values, trimmed, as (values, error)."""
-    values = {}
-    for attr, label in CARB_FIELDS:
-        value = submitted[attr].strip()
-        if len(value) > MAX_CARB_VALUE:
-            return None, f"{label} must be {MAX_CARB_VALUE} characters or fewer."
-        values[attr] = value
-    return values, None
-
-
 def _panel_context(bike: Bike, error: str | None = None, values: dict | None = None) -> dict:
     entries = history(bike.carb_settings)  # newest first
     current = entries[0].setting if entries else None
@@ -71,6 +57,7 @@ def _panel_context(bike: Bike, error: str | None = None, values: dict | None = N
         "fields": CARB_FIELDS,
         "current": current,
         "history": entries,
+        "rides_by_id": {ride.id: ride for ride in bike.rides},
         "error": error,
         "values": values if values is not None else _default_values(current),
     }
@@ -112,7 +99,7 @@ async def log_carb(bike_id: BikeId, request: Request, session: Session = Depends
     note, error = parse_notes(submitted["note"])
     if error is not None:
         return fail(error)
-    values, error = _parse_values(submitted)
+    values, error = parse_carb_values(submitted)
     if error is not None:
         return fail(error)
 

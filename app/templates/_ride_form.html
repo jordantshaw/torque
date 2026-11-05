@@ -6,6 +6,7 @@
   <label>Date<input type="date" name="date" value="{{ values.date if values.date is not none else '' }}"></label>
   <label>{{ unit.ride_label }}<input type="number" name="hours" min="0" step="any" value="{{ values.hours if values.hours is not none else '' }}"></label>
   <label>Notes<input type="text" name="notes" value="{{ values.notes if values.notes is not none else '' }}" placeholder="Optional"></label>
+  <label>Location<input type="text" name="location" value="{{ values.location if values.location is not none else '' }}" placeholder="Optional"></label>
 
   <details class="suspension-fields"{% if wrapper_id %} open{% endif %}>
     <summary>Suspension settings (optional)</summary>
@@ -17,6 +18,15 @@
     <label>Static sag (mm)<input type="number" name="sag_static" step="1" value="{{ values.sag_static if values.sag_static is not none else '' }}"></label>
     <label>Rider sag (mm)<input type="number" name="sag_rider" step="1" value="{{ values.sag_rider if values.sag_rider is not none else '' }}"></label>
   </details>
+
+  {% if carb_fields %}
+  <details class="suspension-fields carb-fields"{% if wrapper_id %} open{% endif %}>
+    <summary>Carb settings (optional)</summary>
+    {% for attr, label in carb_fields %}
+    <label>{{ label }}<input type="text" name="{{ attr }}" value="{{ values[attr] if values[attr] is not none else '' }}"></label>
+    {% endfor %}
+  </details>
+  {% endif %}
 
   <button type="submit" class="btn btn-primary">{{ submit_label }}</button>
   {% if cancel_url %}

@@ -50,6 +50,8 @@
           {% elif not entry.is_start %}
           <span class="carb-nochange">No changes</span>
           {% endif %}
+          {% set ride = rides_by_id.get(entry.setting.ride_id) %}
+          {% if ride %}<span class="carb-ride">Logged with ride{% if ride.location %} at {{ ride.location }}{% endif %}</span>{% endif %}
           {% if entry.setting.note %}<span class="carb-note-text">{{ entry.setting.note }}</span>{% endif %}
         </div>
         <form hx-post="/bikes/{{ bike.id }}/carb/{{ entry.setting.id }}/delete" hx-target="#carb-panel" hx-swap="outerHTML" hx-confirm="Delete this entry?">

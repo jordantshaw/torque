@@ -17,6 +17,7 @@ MAX_ID = 2**31 - 1
 MAX_READING = 1_000_000  # hours or km, in the stored unit
 MAX_NICKNAME = 100
 MAX_NOTES = 1000
+MAX_LOCATION = 100
 _ISO_DATE = re.compile(r"\d{4}-\d{2}-\d{2}")
 
 # Path parameters: out-of-range ids are rejected (422) instead of reaching SQLite.
@@ -81,6 +82,14 @@ def parse_notes(raw) -> tuple[str | None, str | None]:
     text = str(raw or "").strip()
     if len(text) > MAX_NOTES:
         return None, f"Notes must be {MAX_NOTES} characters or fewer."
+    return text or None, None
+
+
+def parse_location(raw) -> tuple[str | None, str | None]:
+    """Where a ride was: optional free text, returned as (text or None, error)."""
+    text = str(raw or "").strip()
+    if len(text) > MAX_LOCATION:
+        return None, f"Location must be {MAX_LOCATION} characters or fewer."
     return text or None, None
 
 

@@ -1383,7 +1383,9 @@ a.hour-meter:hover .hour-meter-edit {
 }
 
 .carb-nochange,
-.carb-note-text {
+.carb-note-text,
+.carb-ride,
+.ride-location {
   color: var(--muted);
 }
 

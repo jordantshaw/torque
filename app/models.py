@@ -57,6 +57,7 @@ class Ride(Base):
     date: Mapped[date] = mapped_column(String)
     hours: Mapped[float]
     notes: Mapped[str | None] = mapped_column(default=None)
+    location: Mapped[str | None] = mapped_column(default=None)
     fork_compression: Mapped[int | None] = mapped_column(default=None)
     fork_rebound: Mapped[int | None] = mapped_column(default=None)
     shock_lsc: Mapped[int | None] = mapped_column(default=None)
@@ -108,5 +109,7 @@ class CarbSetting(Base):
     pilot_jet: Mapped[str] = mapped_column(default="")
     air_screw: Mapped[str] = mapped_column(default="")
     note: Mapped[str | None] = mapped_column(default=None)
+    # Set when the entry was logged as part of a ride (at most one per ride).
+    ride_id: Mapped[int | None] = mapped_column(default=None)
 
     bike: Mapped["Bike"] = relationship(back_populates="carb_settings")
