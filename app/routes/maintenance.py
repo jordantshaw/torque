@@ -1,6 +1,7 @@
 """Maintenance tab actions: set the current reading, complete a single item,
 or complete every item due at a given service point (optionally only those in
-one system, such as Engine).
+one system, such as Engine). Completing an item at a point also records its
+earlier points that were never recorded (see `_add_with_catch_up`).
 
 Every POST here writes to the database (or rejects with an inline error and
 no write) and then re-renders `_maintenance_list.html` with fresh data, via
@@ -28,7 +29,7 @@ from app.routes.common import (
     unit_of,
 )
 from app.services.due import items_for_service_point, recorded_points_by_item
-from app.services.schedule import ItemSchedule, action_at, next_point
+from app.services.schedule import ItemSchedule, action_at, next_point, unrecorded_points_through
 
 maintenance_router = APIRouter()
 
@@ -81,6 +82,23 @@ def _parse_completion(form, unit) -> tuple[str | None, float | None, str | None,
     return date_str, reading, notes, error
 
 
+def _add_with_catch_up(
+    session: Session, bike, item_key: str, schedule: ItemSchedule, recorded: set[int],
+    point: int, date_str: str, reading: float, notes: str | None,
+) -> None:
+    """Record `item_key` at `point`, plus each of its earlier open points, which
+    completing a later service leaves behind (marked as covered by `point`)."""
+    for earlier in unrecorded_points_through(schedule, recorded, point - 1):
+        session.add(ServiceRecord(
+            bike_id=bike.id, item_key=item_key, service_point=earlier, completed_date=date_str,
+            engine_hours=reading, notes=notes, covered_by_point=point,
+        ))
+    session.add(ServiceRecord(
+        bike_id=bike.id, item_key=item_key, service_point=point, completed_date=date_str,
+        engine_hours=reading, notes=notes,
+    ))
+
+
 @maintenance_router.post("/bikes/{bike_id}/hours")
 async def set_hours(bike_id: BikeId, request: Request, session: Session = Depends(get_session)):
     bike = get_bike_or_404(session, bike_id)
@@ -120,14 +138,7 @@ async def complete_item(
     if error is not None:
         return _render_panel(request, bike, error)
 
-    session.add(ServiceRecord(
-        bike_id=bike.id,
-        item_key=item_key,
-        service_point=point,
-        completed_date=date_str,
-        engine_hours=reading,
-        notes=notes,
-    ))
+    _add_with_catch_up(session, bike, item_key, item.schedule, recorded, point, date_str, reading, notes)
     session.commit()
 
     return _render_panel(request, bike)
@@ -146,25 +157,17 @@ async def complete_service_point(
         return _render_panel(request, bike, error)
 
     category = form.get("category")
-    item_keys = items_for_service_point(
-        {
-            item.key: item.schedule
-            for item in bike_model.items
-            if not category or item.category == category
-        },
-        hour,
-        recorded_points_by_item(bike.service_records),
-    )
-
-    for item_key in item_keys:
-        session.add(ServiceRecord(
-            bike_id=bike.id,
-            item_key=item_key,
-            service_point=hour,
-            completed_date=date_str,
-            engine_hours=reading,
-            notes=notes,
-        ))
+    schedules = {
+        item.key: item.schedule
+        for item in bike_model.items
+        if not category or item.category == category
+    }
+    recorded = recorded_points_by_item(bike.service_records)
+    for item_key in items_for_service_point(schedules, hour, recorded):
+        _add_with_catch_up(
+            session, bike, item_key, schedules[item_key], recorded.get(item_key, set()),
+            hour, date_str, reading, notes,
+        )
     session.commit()
 
     return _render_panel(request, bike)

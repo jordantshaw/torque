@@ -153,8 +153,13 @@ def test_complete_item_at_a_specific_service_point(client, db_session):
         data={"point": "60", "date": "2026-02-01", "hours": "61", "notes": ""},
     )
     assert response.status_code == 200
-    record = db_session.query(ServiceRecord).filter_by(bike_id=bike.id, item_key="clutch_disks").one()
-    assert record.service_point == 60  # not the item's next point (30)
+    records = {
+        r.service_point: r
+        for r in db_session.query(ServiceRecord).filter_by(bike_id=bike.id, item_key="clutch_disks")
+    }
+    assert set(records) == {30, 60}  # 60 as asked, and the missed 30 caught up
+    assert records[30].covered_by_point == 60
+    assert records[60].covered_by_point is None
     assert "Done 2026-02-01" in _service_group(client.get(f"/bikes/{bike.id}").text, "60-hour service")
 
 
@@ -209,3 +214,46 @@ def test_completed_items_show_a_ticked_checkbox_and_pending_ones_an_empty_one(cl
     assert 'aria-label="Completed"' in disks
     oil = thirty[thirty.index(">Oil<") - 400 : thirty.index(">Oil<") + 100]
     assert 'aria-label="Not done yet"' in oil
+
+
+def _points(db_session, bike, item_key):
+    db_session.expire_all()
+    return {r.service_point for r in db_session.query(ServiceRecord).filter_by(bike_id=bike.id, item_key=item_key)}
+
+
+def test_complete_all_at_90_catches_up_earlier_points(client, db_session):
+    bike = _make_bike(db_session)
+    response = client.post(
+        f"/bikes/{bike.id}/service-points/90/complete", data={"date": "2026-03-01", "hours": 91}
+    )
+    assert response.status_code == 200
+    assert _points(db_session, bike, "oil") == {30, 60, 90}
+    assert _points(db_session, bike, "clutch_disks") == {30, 60, 90}
+    assert _points(db_session, bike, "connecting_rod") == {90}
+
+
+def test_complete_all_does_not_catch_up_items_without_that_point(client, db_session):
+    bike = _make_bike(db_session)
+    client.post(f"/bikes/{bike.id}/service-points/60/complete", data={"date": "2026-03-01", "hours": 61})
+    assert _points(db_session, bike, "connecting_rod") == set()
+
+
+def test_catch_up_ignores_action_type(client, db_session):
+    bike = _make_bike(db_session)
+    client.post(
+        f"/bikes/{bike.id}/items/clutch_disks/complete",
+        data={"point": "120", "date": "2026-03-01", "hours": 121},
+    )
+    assert _points(db_session, bike, "clutch_disks") == {30, 60, 90, 120}  # the 90h replace too
+
+
+def test_catch_up_skips_already_recorded_points(client, db_session):
+    bike = _make_bike(db_session)
+    db_session.add(ServiceRecord(bike_id=bike.id, item_key="oil", service_point=30, completed_date="2026-01-01", engine_hours=30, notes="first"))
+    db_session.commit()
+    client.post(f"/bikes/{bike.id}/items/oil/complete", data={"point": "90", "date": "2026-03-01", "hours": 91})
+    db_session.expire_all()
+    records = db_session.query(ServiceRecord).filter_by(bike_id=bike.id, item_key="oil").all()
+    assert sorted(r.service_point for r in records) == [30, 60, 90]
+    first = next(r for r in records if r.service_point == 30)
+    assert (first.notes, first.covered_by_point) == ("first", None)
