@@ -14,7 +14,7 @@ from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session, selectinload
 
 from app.db import get_session
-from app.models import Bike, ServiceRecord
+from app.models import Bike, ServiceRecord, UnplannedJob, UnplannedJobItem
 from app.routes.common import BikeId, get_bike_or_404, parse_ids, parse_nickname, unit_of
 from app.services.due import Status, due_infos, health_pct, recorded_points_by_item
 from app.services.hours import current_hours_of
@@ -70,7 +70,15 @@ def _notice(done: str | None, count: str | None) -> str | None:
 
 
 def _clear_history(session: Session, bike_ids: list[int]) -> None:
-    """Delete the service records of the given bikes. Rides and hours are kept."""
+    """Delete the service records and unplanned jobs of the given bikes. Rides
+    and hours are kept. Bulk deletes skip the ORM cascade, so job items go first."""
+    job_ids = session.query(UnplannedJob.id).filter(UnplannedJob.bike_id.in_(bike_ids))
+    session.query(UnplannedJobItem).filter(UnplannedJobItem.job_id.in_(job_ids.scalar_subquery())).delete(
+        synchronize_session=False
+    )
+    session.query(UnplannedJob).filter(UnplannedJob.bike_id.in_(bike_ids)).delete(
+        synchronize_session=False
+    )
     session.query(ServiceRecord).filter(ServiceRecord.bike_id.in_(bike_ids)).delete(
         synchronize_session=False
     )

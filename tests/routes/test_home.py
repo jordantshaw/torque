@@ -215,3 +215,21 @@ def test_the_app_is_called_torque(client):
     html = client.get("/").text
     assert "Torque</a>" in html  # the brand in the top bar
     assert "Moto Maintenance" not in html
+
+
+def test_clear_history_also_removes_unplanned_jobs(client, db_session):
+    from app.models import HoursEvent, ServiceRecord, UnplannedJob, UnplannedJobItem
+
+    bike = _bike_with_history(db_session, "A")
+    job = UnplannedJob(bike_id=bike.id, date="2026-11-02", engine_hours=25, note="Flush")
+    job.items.append(UnplannedJobItem(item_key="oil"))
+    db_session.add(job)
+    db_session.commit()
+
+    client.post(f"/bikes/{bike.id}/clear-history")
+
+    db_session.expire_all()
+    assert db_session.query(UnplannedJob).count() == 0
+    assert db_session.query(UnplannedJobItem).count() == 0
+    assert db_session.query(ServiceRecord).filter_by(bike_id=bike.id).count() == 0
+    assert db_session.query(HoursEvent).filter_by(bike_id=bike.id).count() > 0

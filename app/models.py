@@ -1,8 +1,9 @@
 """SQLAlchemy ORM models for the Torque database.
 
-A `Bike` owns its `rides`, `hours_events`, `service_records`, and
-`carb_settings`: deleting a bike must delete all of them too, with no orphaned
-rows and no foreign-key error. Those four relationships are configured with
+A `Bike` owns its `rides`, `hours_events`, `service_records`,
+`carb_settings` and `unplanned_jobs` (which own their `items`): deleting a
+bike must delete all of them too, with no orphaned rows and no foreign-key
+error. Those relationships are configured with
 `cascade="all, delete-orphan"` so an ORM-level `session.delete(bike)` removes
 the children in the same transaction. This relies on deletes always going
 through the ORM (not raw SQL), so there is no DB-level `ON DELETE CASCADE`.
@@ -45,6 +46,9 @@ class Bike(Base):
         back_populates="bike", cascade="all, delete-orphan"
     )
     carb_settings: Mapped[list["CarbSetting"]] = relationship(
+        back_populates="bike", cascade="all, delete-orphan"
+    )
+    unplanned_jobs: Mapped[list["UnplannedJob"]] = relationship(
         back_populates="bike", cascade="all, delete-orphan"
     )
 
@@ -93,8 +97,43 @@ class ServiceRecord(Base):
     completed_date: Mapped[date] = mapped_column(String)
     engine_hours: Mapped[float]
     notes: Mapped[str | None] = mapped_column(default=None)
+    # Set when this point was recorded by counting an unplanned job.
+    unplanned_job_id: Mapped[int | None] = mapped_column(default=None)
+    # Set when this point was caught up by completing a later point (that point).
+    covered_by_point: Mapped[int | None] = mapped_column(default=None)
 
     bike: Mapped["Bike"] = relationship(back_populates="service_records")
+
+
+class UnplannedJob(Base):
+    """Maintenance done off-schedule, covering zero or more scheduled items."""
+
+    __tablename__ = "unplanned_jobs"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    bike_id: Mapped[int] = mapped_column(ForeignKey("bikes.id"))
+    date: Mapped[date] = mapped_column(String)
+    engine_hours: Mapped[float]
+    note: Mapped[str | None] = mapped_column(default=None)
+
+    bike: Mapped["Bike"] = relationship(back_populates="unplanned_jobs")
+    items: Mapped[list["UnplannedJobItem"]] = relationship(
+        back_populates="job", cascade="all, delete-orphan", order_by="UnplannedJobItem.id"
+    )
+
+    @property
+    def item_keys(self) -> list[str]:
+        return [item.item_key for item in self.items]
+
+
+class UnplannedJobItem(Base):
+    __tablename__ = "unplanned_job_items"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    job_id: Mapped[int] = mapped_column(ForeignKey("unplanned_jobs.id"))
+    item_key: Mapped[str]
+
+    job: Mapped["UnplannedJob"] = relationship(back_populates="items")
 
 
 class CarbSetting(Base):

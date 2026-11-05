@@ -38,6 +38,8 @@ _ADDED_COLUMNS = (
     ("bikes", "distance_unit", "VARCHAR NOT NULL DEFAULT 'km'"),
     ("rides", "location", "VARCHAR"),
     ("carb_settings", "ride_id", "INTEGER"),
+    ("service_records", "unplanned_job_id", "INTEGER"),
+    ("service_records", "covered_by_point", "INTEGER"),
 )
 
 
