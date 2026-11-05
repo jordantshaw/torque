@@ -124,6 +124,18 @@ def next_point(schedule: ItemSchedule, recorded_hours: set[int]) -> int | None:
         k += 1
 
 
+def unrecorded_points_through(schedule: ItemSchedule, recorded_hours: set[int], limit: float) -> list[int]:
+    """Every point the item is due at, from its next point up to and including
+    `limit`, ascending, skipping recorded ones. Walks `next_point`, so once-at,
+    repeating, printed and projected points all count."""
+    seen = set(recorded_hours)
+    points = []
+    while (point := next_point(schedule, seen)) is not None and point <= limit:
+        points.append(point)
+        seen.add(point)
+    return points
+
+
 def action_at(schedule: ItemSchedule, hour: int) -> str | None:
     """Return the action due at the given hour, or None if the schedule
     doesn't define (or can't safely project) an action at that hour."""

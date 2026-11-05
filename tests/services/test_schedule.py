@@ -84,3 +84,24 @@ def test_first_unrecorded_repeat():
     assert first_unrecorded_repeat(20, set()) == 20
     assert first_unrecorded_repeat(20, {20, 40}) == 60
     assert first_unrecorded_repeat(20, {40}) == 20  # a gap is still the first
+
+
+def test_unrecorded_points_through_every_hours():
+    from app.services.schedule import unrecorded_points_through
+
+    oil = EveryHoursSchedule(30, "S")
+    assert unrecorded_points_through(oil, set(), 90) == [30, 60, 90]
+    assert unrecorded_points_through(oil, {30}, 89) == [60]
+
+
+def test_unrecorded_points_through_includes_once_at():
+    from app.services.schedule import unrecorded_points_through
+
+    assert unrecorded_points_through(EveryHoursSchedule(20, "C", once_at=(1,)), set(), 40) == [1, 20, 40]
+
+
+def test_unrecorded_points_through_projects_actions():
+    from app.services.schedule import unrecorded_points_through
+
+    schedule = ActionsSchedule({30: "C", 60: "C", 90: "C"})
+    assert unrecorded_points_through(schedule, {30, 60, 90}, 150) == [120, 150]
