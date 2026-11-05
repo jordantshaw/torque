@@ -17,7 +17,7 @@ from sqlalchemy.orm import Session
 
 from app.db import get_session
 from app.models import HoursEvent, ServiceRecord, UnplannedJob, UnplannedJobItem
-from app.routes.bikes import build_maintenance_context
+from app.routes.bikes import build_maintenance_context, item_job_note
 from app.routes.common import (
     MAX_READING,
     BikeId,
@@ -29,7 +29,7 @@ from app.routes.common import (
     parse_reading,
     unit_of,
 )
-from app.services.due import items_for_service_point, recorded_points_by_item
+from app.services.due import compute_due_info, items_for_service_point, recorded_points_by_item
 from app.services.hours import current_hours_of
 from app.services.schedule import ItemSchedule, action_at, next_point, unrecorded_points_through
 
@@ -238,3 +238,34 @@ async def delete_unplanned_job(
     session.delete(job)
     session.commit()
     return _render_panel(request, bike, view=_view(form))
+
+
+@maintenance_router.post("/bikes/{bike_id}/unplanned-jobs/{job_id}/count/{item_key}")
+async def count_unplanned_job(
+    bike_id: BikeId, job_id: JobId, item_key: str, request: Request, session: Session = Depends(get_session)
+):
+    """Record the item's next point, and every other open point up to the
+    job's reading, as done by the job."""
+    bike = get_bike_or_404(session, bike_id)
+    bike_model = request.app.state.bike_models[bike.model_key]
+    item = next((i for i in bike_model.items if i.key == item_key), None)
+    if item is None:
+        raise HTTPException(status_code=404)
+    job = _job_or_404(session, bike, job_id)
+    form = await request.form()
+    view = _view(form)
+
+    hours = current_hours_of(bike.hours_events)
+    recorded = recorded_points_by_item(bike.service_records)
+    info = compute_due_info(item.schedule, hours, recorded.get(item_key, set()), bike_model.upcoming_window)
+    note = item_job_note(item, bike, hours, recorded, info, bike_model.upcoming_window)
+    if note is None or note.job.id != job.id:
+        return _render_panel(request, bike, "This job no longer applies to that item.", view)
+
+    for point in note.covered:
+        session.add(ServiceRecord(
+            bike_id=bike.id, item_key=item_key, service_point=point, completed_date=job.date,
+            engine_hours=job.engine_hours, notes=job.note, unplanned_job_id=job.id,
+        ))
+    session.commit()
+    return _render_panel(request, bike, view=view)

@@ -22,6 +22,7 @@ from app.services.due import Status, due_infos, health_pct, recorded_points_by_i
 from app.services.hours import current_hours_of
 from app.services.intervals import RowState, build_intervals
 from app.services.maintenance_history import history_entries
+from app.services.unplanned import JobNote, job_note
 from app.services.units import DISPLAY_PREFERENCES
 
 bikes_router = APIRouter()
@@ -49,8 +50,37 @@ def _history_by_item(records) -> dict[str, list]:
     return history
 
 
-def _row(item, state: RowState, point: int | None, action: str | None, history, records) -> dict:
+def item_job_note(item, bike: Bike, hours: float, recorded: dict[str, set[int]], info, upcoming_window) -> JobNote | None:
+    """The unplanned-job note for an item's next point, if a job applies."""
+    jobs = [job for job in bike.unplanned_jobs if item.key in job.item_keys]
+    if not jobs:
+        return None
+    readings = [r.engine_hours for r in bike.service_records if r.item_key == item.key]
+    return job_note(
+        item.schedule, recorded.get(item.key, set()), max(readings, default=None),
+        jobs, info, hours, upcoming_window,
+    )
+
+
+def _jobs_view(bike_model, bike: Bike, hours: float, recorded, infos) -> dict:
+    """What the rows need about unplanned jobs: each item's note (for its next
+    point only), the jobs covering it (newest first), and jobs by id."""
+    jobs = sorted(bike.unplanned_jobs, key=lambda j: (j.date, j.engine_hours, j.id), reverse=True)
+    return {
+        "notes": {
+            item.key: item_job_note(item, bike, hours, recorded, infos[item.key], bike_model.upcoming_window)
+            for item in bike_model.items
+        },
+        "next_points": {key: info.next_point for key, info in infos.items()},
+        "by_item": {item.key: [j for j in jobs if item.key in j.item_keys] for item in bike_model.items},
+        "by_id": {job.id: job for job in jobs},
+    }
+
+
+def _row(item, state: RowState, point: int | None, action: str | None, history, records, jobs) -> dict:
     """One item as the template shows it within a service."""
+    record = records.get((item.key, point))
+    note = jobs["notes"].get(item.key)
     return {
         "key": item.key,
         "name": item.name,
@@ -61,8 +91,11 @@ def _row(item, state: RowState, point: int | None, action: str | None, history, 
         "action_label": ACTION_LABELS.get(action, action),
         "state": state.value,
         "point": point,
-        "record": records.get((item.key, point)),
+        "record": record,
         "history": history.get(item.key, []),
+        "job_note": note if point is not None and point == jobs["next_points"].get(item.key) else None,
+        "covered_by_job": jobs["by_id"].get(record.unplanned_job_id) if record else None,
+        "jobs": jobs["by_item"].get(item.key, []),
     }
 
 
@@ -83,6 +116,7 @@ def _service_groups(bike_model, bike: Bike, hours: float, recorded, infos) -> li
     items = {item.key: item for item in bike_model.items}
     history = _history_by_item(bike.service_records)
     records = {(r.item_key, r.service_point): r for r in bike.service_records}
+    jobs = _jobs_view(bike_model, bike, hours, recorded, infos)
     intervals = build_intervals(
         {key: item.schedule for key, item in items.items()},
         hours,
@@ -99,7 +133,7 @@ def _service_groups(bike_model, bike: Bike, hours: float, recorded, infos) -> li
             "pending": interval.pending,
             "count": len(interval.rows),
             "systems": _systems([
-                _row(items[r.item_key], r.state, interval.point, r.action, history, records)
+                _row(items[r.item_key], r.state, interval.point, r.action, history, records, jobs)
                 for r in interval.rows
             ]),
         }
@@ -107,7 +141,7 @@ def _service_groups(bike_model, bike: Bike, hours: float, recorded, infos) -> li
     ]
 
     beyond = [
-        _row(item, RowState.BEYOND, None, None, history, records)
+        _row(item, RowState.BEYOND, None, None, history, records, jobs)
         for item in bike_model.items
         if infos[item.key].status == Status.BEYOND_SCHEDULE
     ]

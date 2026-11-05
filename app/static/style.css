@@ -1681,6 +1681,44 @@ a.hour-meter:hover .hour-meter-edit {
   right: 0;
 }
 
+.job-note {
+  display: grid;
+  gap: 0.4rem;
+  margin: 0.5rem 0;
+  padding: 0.75rem 0.9rem;
+  color: var(--text);
+  background: rgb(56 189 248 / 0.08);
+  border: 1px solid rgb(56 189 248 / 0.3);
+  border-radius: 10px;
+}
+
+.job-note p {
+  margin: 0;
+}
+
+.job-note-warn {
+  background: rgb(251 191 36 / 0.08);
+  border-color: rgb(251 191 36 / 0.35);
+}
+
+.job-note-warning {
+  color: var(--soon);
+  font-weight: 700;
+}
+
+.job-note-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.do-it-now > summary {
+  display: inline-flex;
+}
+
+.do-it-now[open] > summary {
+  margin-bottom: 0.5rem;
+}
+
 @media (prefers-reduced-motion: reduce) {
   * {
     transition: none !important;

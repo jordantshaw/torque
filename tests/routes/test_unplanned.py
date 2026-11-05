@@ -100,3 +100,78 @@ def test_bike_page_history_view(client, db_session):
     assert "History" in response.text
     assert "Log unplanned job" in response.text
     assert "No maintenance logged yet." in response.text
+
+
+def _count(client, bike, job, item="oil"):
+    return client.post(f"/bikes/{bike.id}/unplanned-jobs/{job.id}/count/{item}", data={"view": "scheduled"})
+
+
+def test_due_row_shows_job_note(client, db_session):
+    bike = _bike(db_session, hours=31)
+    _job(db_session, bike, 25)
+    html = client.get(f"/bikes/{bike.id}").text
+    assert "You did it 6h ago, at 25h (2026-11-02)." in html
+    assert "Counting this job moves the next one to 60h, 35h after the job. The manual's interval is 30h." in html
+    assert "Count this job" in html
+    assert "longer than the manual" not in html
+
+
+def test_due_row_warns_for_long_gap(client, db_session):
+    bike = _bike(db_session, hours=31)
+    _job(db_session, bike, 15)
+    assert "That's longer than the manual's interval." in client.get(f"/bikes/{bike.id}").text
+
+
+def test_due_row_lists_every_point_a_job_covers(client, db_session):
+    bike = _bike(db_session, hours=100)
+    _job(db_session, bike, 90)
+    assert "This covers the 30h, 60h and 90h services." in client.get(f"/bikes/{bike.id}").text
+
+
+def test_no_note_when_item_not_due(client, db_session):
+    bike = _bike(db_session, hours=10)
+    _job(db_session, bike, 9)
+    assert "Count this job" not in client.get(f"/bikes/{bike.id}").text
+
+
+def test_count_job_records_point_and_links_job(client, db_session):
+    bike = _bike(db_session, hours=31)
+    job = _job(db_session, bike, 25)
+    response = _count(client, bike, job)
+    assert response.status_code == 200
+    db_session.expire_all()
+    [record] = db_session.query(ServiceRecord).filter_by(item_key="oil").all()
+    assert (record.service_point, record.unplanned_job_id, record.engine_hours) == (30, job.id, 25)
+    assert record.completed_date == "2026-11-02"
+    assert "Covered by unplanned job on 2026-11-02 at 25h" in response.text
+    assert "Count this job" not in response.text
+
+
+def test_count_job_covers_all_missed_points(client, db_session):
+    bike = _bike(db_session, hours=100)
+    job = _job(db_session, bike, 90)
+    assert _count(client, bike, job).status_code == 200
+    db_session.expire_all()
+    assert {r.service_point for r in db_session.query(ServiceRecord).filter_by(item_key="oil")} == {30, 60, 90}
+
+
+def test_count_job_rejects_when_it_no_longer_applies(client, db_session):
+    bike = _bike(db_session, hours=31)
+    job = _job(db_session, bike, 25)
+    client.post(f"/bikes/{bike.id}/items/oil/complete", data={"date": "2026-11-03", "hours": 31})
+    response = _count(client, bike, job)
+    assert response.status_code == 400
+    assert "This job no longer applies to that item." in response.text
+    assert db_session.query(ServiceRecord).filter_by(item_key="oil").count() == 1
+
+
+def test_count_job_unknown_item_404(client, db_session):
+    bike = _bike(db_session, hours=31)
+    job = _job(db_session, bike, 25)
+    assert _count(client, bike, job, item="nope").status_code == 404
+
+
+def test_item_history_lists_unplanned_jobs(client, db_session):
+    bike = _bike(db_session, hours=31)
+    _job(db_session, bike, 25)
+    assert "Unplanned, 2026-11-02 at 25h" in client.get(f"/bikes/{bike.id}").text

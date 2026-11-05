@@ -7,14 +7,15 @@
 <span class="row-meta">Inspect by condition.</span>
 {% else %}
 <span class="chip">{{ row.action_label }}</span>
-{% if row.state == "done" %}<span class="row-meta">Done {{ row.record.completed_date }}</span>{% endif %}
+{% if row.state == "done" and row.covered_by_job %}<span class="row-meta">Covered by unplanned job on {{ row.covered_by_job.date }} at {{ row.covered_by_job.engine_hours|amt }}{{ unit.suffix }}</span>
+{% elif row.state == "done" %}<span class="row-meta">Done {{ row.record.completed_date }}</span>{% endif %}
 {% endif %}
 {% if has_body %}<span class="row-act">Details</span>{% endif %}
 {% endmacro %}
 
 {% macro item_row(row) %}
 {% set can_complete = row.point is not none and row.state != "done" %}
-{% set has_body = can_complete or row.history or row.description or row.schedule_page %}
+{% set has_body = can_complete or row.history or row.jobs or row.description or row.schedule_page %}
 {% if has_body %}
 <details class="row status-{{ row.state }}" data-cat="{{ row.category }}" data-keep-open="row:{{ row.point }}:{{ row.key }}">
   <summary>{{ row_line(row, true) }}</summary>
@@ -25,11 +26,35 @@
     {% if row.schedule_page or row.page %}
     <p class="row-refs">Manual: {% if row.schedule_page %}schedule p. {{ row.schedule_page }}{% endif %}{% if row.schedule_page and row.page %}, {% endif %}{% if row.page %}how-to p. {{ row.page }}{% endif %}</p>
     {% endif %}
-    {% if can_complete %}
+    {% if can_complete and row.job_note %}
+    {% set n = row.job_note %}
+    <div class="job-note{% if n.warn %} job-note-warn{% endif %}">
+      <p>You did it {{ n.ago|amt }}{{ unit.suffix }} ago, at {{ n.job.engine_hours|amt }}{{ unit.suffix }} ({{ n.job.date }}).</p>
+      {% if n.covered|length > 1 %}<p>This covers the {% for p in n.covered %}{{ p|amt }}{{ unit.suffix }}{% if loop.revindex == 2 %} and {% elif not loop.last %}, {% endif %}{% endfor %} services.</p>{% endif %}
+      {% if n.next_point is not none %}<p>Counting this job moves the next one to {{ n.next_point|amt }}{{ unit.suffix }}, {{ n.gap_after_job|amt }}{{ unit.suffix }} after the job. The manual's interval is {{ n.manual_interval|amt }}{{ unit.suffix }}.</p>{% endif %}
+      {% if n.warn %}<p class="job-note-warning">That's longer than the manual's interval.</p>{% endif %}
+      <div class="job-note-actions">
+        <form hx-post="/bikes/{{ bike.id }}/unplanned-jobs/{{ n.job.id }}/count/{{ row.key }}" hx-target="#maintenance-panel" hx-swap="outerHTML">
+          <input type="hidden" name="view" value="{{ view }}">
+          <button type="submit" class="btn btn-primary">Count this job</button>
+        </form>
+      </div>
+      <details class="do-it-now">
+        <summary class="btn">Do it now</summary>
+        {{ complete_form("/bikes/%s/items/%s/complete"|format(bike.id, row.key), "complete-item-form", "Mark done", row.point) }}
+      </details>
+    </div>
+    {% elif can_complete %}
     {{ complete_form("/bikes/%s/items/%s/complete"|format(bike.id, row.key), "complete-item-form", "Mark done", row.point) }}
     {% endif %}
-    {% if row.history %}
+    {% if row.history or row.jobs %}
     <ul class="item-history">
+      {% for job in row.jobs %}
+      <li class="item-history-entry">
+        Unplanned, {{ job.date }} at {{ job.engine_hours|amt }}{{ unit.suffix }}
+        {% if job.note %}<span class="history-notes">{{ job.note }}</span>{% endif %}
+      </li>
+      {% endfor %}
       {% for record in row.history %}
       <li class="item-history-entry">
         {{ record.service_point|amt }}{{ unit.suffix }} service, completed {{ record.completed_date }} at {{ record.engine_hours|amt }}{{ unit.suffix }}
