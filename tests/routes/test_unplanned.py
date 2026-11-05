@@ -200,3 +200,11 @@ def test_deleting_a_job_behind_a_later_service_keeps_its_points_caught_up(client
     assert set(records) == {30, 60}
     assert (records[30].unplanned_job_id, records[30].covered_by_point) == (None, 60)
     assert records[30].completed_date == "2026-11-04"
+
+
+def test_item_picker_checkboxes_override_the_full_width_input_style(client):
+    css = client.get("/static/style.css").text
+    rule = css[css.index(".log-job-system .check-label input"):]
+    rule = rule[:rule.index("}")]
+    assert "width: 1.05rem" in rule  # the global `input` rule is width: 100%
+    assert "flex: none" in rule

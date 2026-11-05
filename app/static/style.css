@@ -1636,6 +1636,17 @@ a.hour-meter:hover .hour-meter-edit {
   align-items: center;
   gap: 0.5rem;
   padding: 0.2rem 0 0.2rem 1rem;
+  font-size: 0.875rem;
+  cursor: pointer;
+}
+
+.log-job-system .check-label input {
+  flex: none;
+  width: 1.05rem;
+  height: 1.05rem;
+  margin: 0;
+  padding: 0;
+  accent-color: var(--accent);
 }
 
 .pill-unplanned {
